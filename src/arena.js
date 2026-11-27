@@ -465,38 +465,85 @@ class ArenaBattleEngine {
     createTurret(28, -10, 'red', false);
     createTurret(10, -28, 'red', false);
 
-    // Jungle Creep Monster Camps (seen at 0:17 - 0:21 in the Reel!)
-    this.spawnJungleCreep(-10.5, 8.5, 'Crimson Buff Beast', 0xdc2626, 1.35);
-    this.spawnJungleCreep(14, -4, 'Azure Golem', 0x2563eb, 1.35);
-    this.spawnJungleCreep(-4, -14, 'River Crab', 0xf59e0b, 1.0);
-    this.spawnJungleCreep(4, 14, 'Forest Boar', 0xd97706, 1.0);
+    // Jungle Creep Monster Camps (4 Distinct 3D Monsters with Custom Textures!)
+    this.spawnJungleCreep(-10.5, 8.5, 'crimson_buff', 'Crimson Molten Fiend', 0xdc2626, 1.35);
+    this.spawnJungleCreep(14, -4, 'azure_golem', 'Azure Sentinel Golem', 0x2563eb, 1.35);
+    this.spawnJungleCreep(-4, -14, 'river_crab', 'Golden Scuttler Crab', 0xf59e0b, 1.05);
+    this.spawnJungleCreep(4, 14, 'forest_boar', 'Razor Tusk Boar', 0xd97706, 1.05);
 
     if (this.targetLockRing) {
       this.scene.add(this.targetLockRing);
     }
   }
 
-  spawnJungleCreep(x, z, name, colorHex, scale = 1.0) {
+  spawnJungleCreep(x, z, monsterId, name, colorHex, scale = 1.0) {
     const g = new THREE.Group();
     g.position.set(x, 0, z);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.5 });
-    const hornMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, metalness: 0.4 });
+    const texLoader = new THREE.TextureLoader();
+    const monTex = texLoader.load(`assets/textures/monsters/${monsterId}_tex.png?v=4`);
+    const bodyMat = new THREE.MeshStandardMaterial({ map: monTex, roughness: 0.45, metalness: 0.2 });
+    const hornMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.7, roughness: 0.25 });
+    const glowMat = new THREE.MeshStandardMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.9 });
+    const darkMat = new THREE.MeshStandardMaterial({ color: 0x1e1b2e, roughness: 0.6 });
 
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1.4 * scale, 1.2 * scale, 1.8 * scale), bodyMat);
-    body.position.y = 0.8 * scale;
-    body.castShadow = true;
-    g.add(body);
-
-    const head = new THREE.Mesh(new THREE.BoxGeometry(1.0 * scale, 0.9 * scale, 0.9 * scale), bodyMat);
-    head.position.set(0, 1.2 * scale, 1.0 * scale);
-    g.add(head);
-
-    [-0.45, 0.45].forEach((hx) => {
-      const spike = new THREE.Mesh(new THREE.ConeGeometry(0.22 * scale, 0.75 * scale, 5), hornMat);
-      spike.position.set(hx * scale, 1.75 * scale, 0.95 * scale);
-      spike.rotation.x = 0.4;
-      g.add(spike);
-    });
+    if (monsterId === 'crimson_buff') {
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1.6 * scale, 1.3 * scale, 2.2 * scale), bodyMat);
+      body.position.y = 1.0 * scale;
+      const head = new THREE.Mesh(new THREE.BoxGeometry(1.25 * scale, 1.05 * scale, 1.1 * scale), bodyMat);
+      head.position.set(0, 1.45 * scale, 1.15 * scale);
+      g.add(body, head);
+      [-0.65, 0.65].forEach((lx) => {
+        [-0.75, 0.75].forEach((lz) => {
+          const leg = new THREE.Mesh(new THREE.BoxGeometry(0.45 * scale, 0.95 * scale, 0.45 * scale), darkMat);
+          leg.position.set(lx * scale, 0.48 * scale, lz * scale);
+          g.add(leg);
+        });
+      });
+      [-0.52, 0.52].forEach((hx) => {
+        const horn = new THREE.Mesh(new THREE.ConeGeometry(0.24 * scale, 1.05 * scale, 5), hornMat);
+        horn.position.set(hx * scale, 2.15 * scale, 1.15 * scale);
+        horn.rotation.set(0.45, 0, -hx * 0.5);
+        g.add(horn);
+      });
+    } else if (monsterId === 'azure_golem') {
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(1.85 * scale, 1.65 * scale, 1.25 * scale), bodyMat);
+      torso.position.y = 1.55 * scale;
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.95 * scale, 0.85 * scale, 0.95 * scale), bodyMat);
+      head.position.set(0, 2.65 * scale, 0.1 * scale);
+      const core = new THREE.Mesh(new THREE.TorusGeometry(0.58 * scale, 0.1 * scale, 8, 24), glowMat);
+      core.position.set(0, 1.6 * scale, 0.65 * scale);
+      g.add(torso, head, core);
+      [-1, 1].forEach((dir) => {
+        const arm = new THREE.Mesh(new THREE.BoxGeometry(0.62 * scale, 1.45 * scale, 0.62 * scale), bodyMat);
+        arm.position.set(dir * 1.35 * scale, 1.35 * scale, 0.25 * scale);
+        const fist = new THREE.Mesh(new THREE.BoxGeometry(0.75 * scale, 0.75 * scale, 0.75 * scale), glowMat);
+        fist.position.set(dir * 1.35 * scale, 0.55 * scale, 0.35 * scale);
+        g.add(arm, fist);
+      });
+    } else if (monsterId === 'river_crab') {
+      const shell = new THREE.Mesh(new THREE.CylinderGeometry(1.15 * scale, 1.35 * scale, 0.85 * scale, 12), bodyMat);
+      shell.position.y = 0.65 * scale;
+      const crown = new THREE.Mesh(new THREE.ConeGeometry(0.55 * scale, 0.75 * scale, 6), hornMat);
+      crown.position.y = 1.35 * scale;
+      g.add(shell, crown);
+      [-1, 1].forEach((dir) => {
+        const claw = new THREE.Mesh(new THREE.BoxGeometry(0.55 * scale, 0.42 * scale, 0.95 * scale), hornMat);
+        claw.position.set(dir * 1.15 * scale, 0.65 * scale, 0.85 * scale);
+        g.add(claw);
+      });
+    } else {
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1.35 * scale, 1.15 * scale, 1.85 * scale), bodyMat);
+      body.position.y = 0.85 * scale;
+      const snout = new THREE.Mesh(new THREE.BoxGeometry(1.05 * scale, 0.88 * scale, 0.95 * scale), bodyMat);
+      snout.position.set(0, 1.05 * scale, 1.05 * scale);
+      g.add(body, snout);
+      [-1, 1].forEach((dir) => {
+        const tusk = new THREE.Mesh(new THREE.ConeGeometry(0.16 * scale, 0.75 * scale, 5), hornMat);
+        tusk.position.set(dir * 0.48 * scale, 0.95 * scale, 1.65 * scale);
+        tusk.rotation.x = 0.85;
+        g.add(tusk);
+      });
+    }
 
     this.scene.add(g);
     this.creeps.push({
@@ -656,49 +703,82 @@ class ArenaBattleEngine {
   }
 
   spawnMinionWave() {
+    const texLoader = new THREE.TextureLoader();
     const createMinion = (team, x, z, idx) => {
-      const color = team === 'blue' ? 0x2563eb : 0xdc2626;
-      const hatColor = team === 'blue' ? 0x93c5fd : 0xfca5a5;
+      const color = team === 'blue' ? 0x1d4ed8 : 0xb91c1c;
+      const hatColor = team === 'blue' ? 0x60a5fa : 0xf87171;
+      const glowColor = team === 'blue' ? 0x38bdf8 : 0xef4444;
+      const minTex = texLoader.load(`assets/textures/minions/minion_${team}_tex.png?v=4`);
+      const armorMat = new THREE.MeshStandardMaterial({ map: minTex, roughness: 0.45, metalness: 0.35 });
+      const trimMat = new THREE.MeshStandardMaterial({ color: hatColor, roughness: 0.3, metalness: 0.6 });
+      const glowMat = new THREE.MeshStandardMaterial({ color: glowColor, emissive: glowColor, emissiveIntensity: 0.9 });
+      const skinMat = new THREE.MeshStandardMaterial({ color: 0xfde68a, roughness: 0.45 });
       const g = new THREE.Group();
       g.position.set(x, 0, z);
 
-      const body = new THREE.Mesh(
-        new THREE.BoxGeometry(0.75, 0.95, 0.55),
-        new THREE.MeshStandardMaterial({ color, roughness: 0.5 })
-      );
-      body.position.y = 0.65;
-      body.castShadow = true;
-      g.add(body);
+      if (idx === 2) {
+        // Siege Cannon Cart Minion
+        const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.55, 1.45), armorMat);
+        chassis.position.y = 0.52;
+        const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.32, 1.45, 12), trimMat);
+        barrel.rotation.x = Math.PI / 2.8;
+        barrel.position.set(0, 0.95, 0.25);
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.05, 8, 16), glowMat);
+        ring.position.set(0, 1.25, 0.78);
+        g.add(chassis, barrel, ring);
+        [-0.62, 0.62].forEach((wx) => {
+          [-0.48, 0.48].forEach((wz) => {
+            const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.16, 12), trimMat);
+            wheel.rotation.z = Math.PI / 2;
+            wheel.position.set(wx, 0.28, wz);
+            g.add(wheel);
+          });
+        });
+      } else if (idx === 1) {
+        // Arcane Caster Mage Minion
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.98, 0.58), armorMat);
+        body.position.y = 0.65;
+        const head = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.62, 0.62), skinMat);
+        head.position.y = 1.45;
+        const hat = new THREE.Mesh(new THREE.ConeGeometry(0.55, 0.78, 6), trimMat);
+        hat.position.y = 2.05;
+        const staff = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.35, 8), trimMat);
+        staff.position.set(0.48, 0.85, 0.25);
+        const orb = new THREE.Mesh(new THREE.OctahedronGeometry(0.22, 0), glowMat);
+        orb.position.set(0.48, 1.58, 0.25);
+        g.add(body, head, hat, staff, orb);
+      } else {
+        // Armored Melee Knight Minion with Tower Shield & Sword
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.82, 1.02, 0.62), armorMat);
+        body.position.y = 0.68;
+        const head = new THREE.Mesh(new THREE.BoxGeometry(0.64, 0.64, 0.64), skinMat);
+        head.position.y = 1.48;
+        const helm = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.38, 0.72), trimMat);
+        helm.position.y = 1.78;
+        const shield = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.85, 0.65), trimMat);
+        shield.position.set(-0.52, 0.78, 0.22);
+        shield.rotation.y = 0.25;
+        const sword = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.10, 1.15), glowMat);
+        sword.position.set(0.52, 0.78, 0.55);
+        g.add(body, head, helm, shield, sword);
+      }
 
-      const head = new THREE.Mesh(
-        new THREE.BoxGeometry(0.62, 0.62, 0.62),
-        new THREE.MeshStandardMaterial({ color: 0xfde68a, roughness: 0.5 })
-      );
-      head.position.y = 1.45;
-      g.add(head);
-
-      const helm = new THREE.Mesh(
-        new THREE.ConeGeometry(0.48, 0.45, 4),
-        new THREE.MeshStandardMaterial({ color: hatColor })
-      );
-      helm.position.y = 1.9;
-      g.add(helm);
-
+      const roleNames = ['Knight Minion', 'Mage Minion', 'Siege Cannon'];
       this.scene.add(g);
       this.minions.push({
         id: `minion_${team}_${Date.now()}_${idx}`,
-        name: `${team === 'blue' ? 'Blue' : 'Red'} Minion`,
+        name: `${team === 'blue' ? 'Blue' : 'Red'} ${roleNames[idx % 3]}`,
         isMinion: true,
         team,
         x,
         z,
-        r: 0.6,
-        hp: 620,
-        maxHp: 620,
-        atk: 46,
+        r: idx === 2 ? 0.75 : 0.6,
+        hp: idx === 2 ? 820 : 620,
+        maxHp: idx === 2 ? 820 : 620,
+        atk: idx === 2 ? 58 : 46,
         def: 6,
         spd: 4.1,
-        range: idx === 2 ? 6.0 : 2.3,
+        range: idx >= 1 ? 6.2 : 2.3,
         atkCd: 0,
         level: 1,
         mesh: g,

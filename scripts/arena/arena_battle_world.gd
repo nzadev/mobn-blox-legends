@@ -274,10 +274,10 @@ func build_arena_map() -> void:
 	_create_turret(28.0, -10.0, "red", false)
 	_create_turret(10.0, -28.0, "red", false)
 
-	_spawn_jungle_creep(-10.5, 8.5, "Crimson Buff Beast", "#dc2626", 1.35)
-	_spawn_jungle_creep(14.0, -4.0, "Azure Golem", "#2563eb", 1.35)
-	_spawn_jungle_creep(-4.0, -14.0, "River Crab", "#f59e0b", 1.0)
-	_spawn_jungle_creep(4.0, 14.0, "Forest Boar", "#d97706", 1.0)
+	_spawn_jungle_creep(-10.5, 8.5, "crimson_buff", "Crimson Molten Fiend", "#dc2626", 1.35)
+	_spawn_jungle_creep(14.0, -4.0, "azure_golem", "Azure Sentinel Golem", "#2563eb", 1.35)
+	_spawn_jungle_creep(-4.0, -14.0, "river_crab", "Golden Scuttler Crab", "#f59e0b", 1.0)
+	_spawn_jungle_creep(4.0, 14.0, "forest_boar", "Razor Tusk Boar", "#d97706", 1.0)
 
 func _create_brick_wall(x: float, z: float, length: float, rot_y: float, b_mat: Material, c_mat: Material) -> void:
 	var wg := Node3D.new()
@@ -376,9 +376,14 @@ func _create_turret(tx: float, tz: float, team_str: String, is_nexus_flag: bool)
 	base.position.y = 0.4
 	u.add_child(base)
 
+	var pillar_mat := RobloxHeroBuilder.make_mat("#cbd5e1", 0.5, 0.1)
+	var turret_tex: String = "res://assets/textures/turrets/turret_%s_tex.png" % team_str
+	if ResourceLoader.exists(turret_tex):
+		pillar_mat.albedo_texture = load(turret_tex) as Texture2D
+
 	var pillar := RobloxHeroBuilder.make_box(
 		Vector3(2.2 if is_nexus_flag else 1.3, 4.2 if is_nexus_flag else 3.2, 2.2 if is_nexus_flag else 1.3),
-		RobloxHeroBuilder.make_mat("#cbd5e1", 0.5, 0.1),
+		pillar_mat,
 		Vector3(0.0, 2.4 if is_nexus_flag else 1.9, 0.0)
 	)
 	u.add_child(pillar)
@@ -408,28 +413,22 @@ func _create_turret(tx: float, tz: float, team_str: String, is_nexus_flag: bool)
 	arena_root.add_child(u)
 	turret_units.append(u)
 
-func _spawn_jungle_creep(x: float, z: float, c_name: String, col_hex: String, scale_f: float) -> void:
+func _spawn_jungle_creep(x: float, z: float, monster_id: String, c_name: String, col_hex: String, scale_f: float) -> void:
 	var u := CombatUnit.new()
-	u.unit_id = "creep_%d" % creep_units.size()
+	u.unit_id = "creep_%s_%d" % [monster_id, creep_units.size()]
 	u.unit_name = c_name
 	u.team = "neutral"
 	u.is_creep = true
 	u.home_pos = Vector3(x, 0.0, z)
 	u.position = u.home_pos
-	u.unit_radius = 1.1 * scale_f
+	u.unit_radius = 1.15 * scale_f
 	u.health.setup(roundf(1450.0 * scale_f), 0.0, 12.0)
 	u.atk = roundf(75.0 * scale_f)
 	u.move_speed = 3.4
-	u.attack_range = 2.5
+	u.attack_range = 2.6
 	u.level = 4
 
-	var b_mat := RobloxHeroBuilder.make_mat(col_hex, 0.5, 0.1)
-	var h_mat := RobloxHeroBuilder.make_mat("#fef08a", 0.3, 0.4)
-	u.add_child(RobloxHeroBuilder.make_box(Vector3(1.4 * scale_f, 1.2 * scale_f, 1.8 * scale_f), b_mat, Vector3(0.0, 0.8 * scale_f, 0.0)))
-	u.add_child(RobloxHeroBuilder.make_box(Vector3(1.0 * scale_f, 0.9 * scale_f, 0.9 * scale_f), b_mat, Vector3(0.0, 1.2 * scale_f, 1.0 * scale_f)))
-	u.add_child(RobloxHeroBuilder.make_box(Vector3(0.24 * scale_f, 0.75 * scale_f, 0.24 * scale_f), h_mat, Vector3(-0.42 * scale_f, 1.75 * scale_f, 0.95 * scale_f)))
-	u.add_child(RobloxHeroBuilder.make_box(Vector3(0.24 * scale_f, 0.75 * scale_f, 0.24 * scale_f), h_mat, Vector3(0.42 * scale_f, 1.75 * scale_f, 0.95 * scale_f)))
-
+	u.add_child(RobloxHeroBuilder.build_monster_rig(monster_id, col_hex, scale_f))
 	arena_root.add_child(u)
 	creep_units.append(u)
 
@@ -565,23 +564,19 @@ func spawn_minion_wave() -> void:
 
 func _create_minion(team_str: String, x: float, z: float, idx: int) -> void:
 	var u := CombatUnit.new()
+	var role_names: Array[String] = ["Knight Minion", "Mage Minion", "Siege Cannon"]
 	u.unit_id = "minion_%s_%d_%d" % [team_str, Time.get_ticks_msec(), idx]
-	u.unit_name = "%s Minion" % team_str.capitalize()
+	u.unit_name = "%s %s" % [team_str.capitalize(), role_names[idx % 3]]
 	u.team = team_str
 	u.is_minion = true
 	u.position = Vector3(x, 0.0, z)
-	u.unit_radius = 0.6
-	u.health.setup(620.0, 0.0, 6.0)
-	u.atk = 46.0
+	u.unit_radius = 0.75 if idx == 2 else 0.6
+	u.health.setup(820.0 if idx == 2 else 620.0, 0.0, 8.0 if idx == 2 else 6.0)
+	u.atk = 58.0 if idx == 2 else 46.0
 	u.move_speed = 4.1
-	u.attack_range = 6.0 if idx == 2 else 2.3
+	u.attack_range = 6.5 if idx >= 1 else 2.3
 
-	var b_col: String = "#2563eb" if team_str == "blue" else "#dc2626"
-	var h_col: String = "#93c5fd" if team_str == "blue" else "#fca5a5"
-	u.add_child(RobloxHeroBuilder.make_box(Vector3(0.75, 0.95, 0.55), RobloxHeroBuilder.make_mat(b_col, 0.5, 0.1), Vector3(0.0, 0.65, 0.0)))
-	u.add_child(RobloxHeroBuilder.make_box(Vector3(0.62, 0.62, 0.62), RobloxHeroBuilder.make_mat("#fde68a", 0.5, 0.05), Vector3(0.0, 1.45, 0.0)))
-	u.add_child(RobloxHeroBuilder.make_box(Vector3(0.7, 0.35, 0.7), RobloxHeroBuilder.make_mat(h_col, 0.4, 0.2), Vector3(0.0, 1.9, 0.0)))
-
+	u.add_child(RobloxHeroBuilder.build_minion_rig(team_str, idx % 3))
 	arena_root.add_child(u)
 	minion_units.append(u)
 

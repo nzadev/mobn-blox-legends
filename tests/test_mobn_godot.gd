@@ -20,8 +20,19 @@ func _ready() -> void:
 		assert(ResourceLoader.exists(h.portrait_path), "Missing portrait asset: " + h.portrait_path)
 		assert(ResourceLoader.exists(h.face_tex_path), "Missing face texture: " + h.face_tex_path)
 		assert(ResourceLoader.exists(h.torso_tex_path), "Missing torso texture: " + h.torso_tex_path)
+		assert(ResourceLoader.exists("res://assets/weapons/%s_weapon.png" % h.id), "Missing weapon icon for " + h.id)
 		for sk: SkillData in h.skills:
 			assert(ResourceLoader.exists(sk.icon_path), "Missing skill icon: " + sk.icon_path)
+
+	for mid: String in ["crimson_buff", "azure_golem", "river_crab", "forest_boar"]:
+		assert(ResourceLoader.exists("res://assets/monsters/%s.png" % mid), "Missing monster card: " + mid)
+		assert(ResourceLoader.exists("res://assets/textures/monsters/%s_tex.png" % mid), "Missing monster tex: " + mid)
+
+	for team_s: String in ["blue", "red"]:
+		assert(ResourceLoader.exists("res://assets/minions/minion_%s.png" % team_s), "Missing minion card: " + team_s)
+		assert(ResourceLoader.exists("res://assets/textures/minions/minion_%s_tex.png" % team_s), "Missing minion tex: " + team_s)
+		assert(ResourceLoader.exists("res://assets/turrets/turret_%s.png" % team_s), "Missing turret card: " + team_s)
+		assert(ResourceLoader.exists("res://assets/textures/turrets/turret_%s_tex.png" % team_s), "Missing turret tex: " + team_s)
 
 	GameDatabase.prepare_default_rosters()
 	main_inst.show_screen("battle")

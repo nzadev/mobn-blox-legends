@@ -580,82 +580,164 @@ function buildRobloxHeroMesh(hero, skinOverride = null) {
   const rightArmPivot = buildArm(0.82);
   root.add(leftArmPivot, rightArmPivot);
 
-  // High-Detail Signature 3D Weapons
+  // High-Detail Signature 3D Weapons (12 Unique Hero Weapons!)
   const weaponGroup = new THREE.Group();
   weaponGroup.position.set(0, -0.9, 0.38);
+  const leftWeaponGroup = new THREE.Group();
+  leftWeaponGroup.position.set(0, -0.9, 0.38);
 
-  if (c.weapon === 'cannon' || c.weapon === 'splat_gun') {
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.56, 1.5), matWeapon);
+  if (hero.id === 'laylul') {
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.58, 1.55), matWeapon);
     body.position.set(0, 0, 0.45);
-    weaponGroup.add(body);
-
-    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.26, 1.85, 12), matTrim);
+    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.28, 1.95, 12), matTrim);
     barrel.rotation.x = Math.PI / 2;
-    barrel.position.set(0, 0.08, 0.95);
-    weaponGroup.add(barrel);
-
-    const muzzleRing = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.06, 8, 24), matAura);
-    muzzleRing.position.set(0, 0.08, 1.75);
-    weaponGroup.add(muzzleRing);
-
-    rightArmPivot.rotation.x = -0.55;
-  } else if (c.weapon === 'giant_hammer') {
-    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 2.2, 10), matCoat);
-    shaft.rotation.x = Math.PI / 2;
-    shaft.position.set(0, 0, 0.65);
-    weaponGroup.add(shaft);
-
-    const head = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.85, 0.85), matWeapon);
-    head.position.set(0, 0, 1.48);
-    weaponGroup.add(head);
-
-    const trimCap = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.45, 0.45), matAura);
-    trimCap.position.set(0, 0, 1.48);
-    weaponGroup.add(trimCap);
-    rightArmPivot.rotation.x = -0.45;
-  } else if (c.weapon === 'dual_blades' || c.weapon === 'katana' || c.weapon === 'greatsword') {
-    const isGreat = c.weapon === 'greatsword';
-    const hilt = new THREE.Mesh(new THREE.BoxGeometry(isGreat ? 0.72 : 0.42, 0.14, 0.18), matTrim);
-    hilt.position.set(0, 0, 0.22);
-    weaponGroup.add(hilt);
-
-    const bladeW = isGreat ? 0.36 : 0.16;
-    const bladeL = isGreat ? 2.25 : 1.75;
-    const blade = new THREE.Mesh(new THREE.BoxGeometry(bladeW, 0.08, bladeL), matWeapon);
-    blade.position.set(0, 0, 0.25 + bladeL * 0.5);
-    weaponGroup.add(blade);
-
-    const edge = new THREE.Mesh(new THREE.BoxGeometry(bladeW * 0.5, 0.11, bladeL * 0.92), matAura);
-    edge.position.set(0, 0, 0.25 + bladeL * 0.5);
-    weaponGroup.add(edge);
-
-    if (c.weapon === 'dual_blades') {
-      const leftBlade = weaponGroup.clone();
-      leftArmPivot.add(leftBlade);
-    }
-  } else if (c.weapon === 'dragon_claws' || c.weapon === 'gauntlets') {
-    [-1, 0, 1].forEach((ci) => {
-      const claw = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.75, 4), matAura);
-      claw.rotation.x = Math.PI / 2;
-      claw.position.set(ci * 0.16, 0, 0.45);
-      weaponGroup.add(claw);
+    barrel.position.set(0, 0.06, 1.05);
+    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.06, 8, 24), matAura);
+    ring1.position.set(0, 0.06, 1.45);
+    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(0.38, 0.07, 8, 24), matAura);
+    ring2.position.set(0, 0.06, 1.92);
+    const fins = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.14, 0.65), matTrim);
+    fins.position.set(0, 0.06, 0.85);
+    weaponGroup.add(body, barrel, ring1, ring2, fins);
+  } else if (hero.id === 'sabro') {
+    [weaponGroup, leftWeaponGroup].forEach((wg) => {
+      const guard = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.12, 0.16), matTrim);
+      guard.position.set(0, 0, 0.18);
+      const blade = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 1.85), matWeapon);
+      blade.position.set(0, 0, 1.12);
+      const edge = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.11, 1.78), matAura);
+      edge.position.set(0, 0.02, 1.12);
+      wg.add(guard, blade, edge);
     });
-    const leftClaw = weaponGroup.clone();
-    leftArmPivot.add(leftClaw);
-  } else {
-    const staff = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.85, 10), matTrim);
+  } else if (hero.id === 'yuzong') {
+    [weaponGroup, leftWeaponGroup].forEach((wg) => {
+      const cuff = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.48, 0.58), matTrim);
+      cuff.position.set(0, 0.05, 0.05);
+      wg.add(cuff);
+      [-1, 0, 1].forEach((ci) => {
+        const talon = new THREE.Mesh(new THREE.ConeGeometry(0.10, 0.92, 5), matAura);
+        talon.rotation.x = Math.PI / 2;
+        talon.position.set(ci * 0.17, 0, 0.62);
+        wg.add(talon);
+      });
+    });
+  } else if (hero.id === 'kajee') {
+    for (let s = 0; s < 6; s++) {
+      const link = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.36), s % 2 === 0 ? matAura : matTrim);
+      link.position.set(Math.sin(s * 0.65) * 0.24, Math.cos(s * 0.5) * 0.12, 0.3 + s * 0.35);
+      link.rotation.y = Math.sin(s) * 0.35;
+      weaponGroup.add(link);
+    }
+    const shield = new THREE.Mesh(new THREE.TorusGeometry(0.38, 0.08, 8, 20), matTrim);
+    shield.rotation.y = Math.PI / 2;
+    shield.position.set(-0.15, 0.1, 0.1);
+    leftWeaponGroup.add(shield);
+  } else if (hero.id === 'yeen') {
+    [weaponGroup, leftWeaponGroup].forEach((wg) => {
+      const fist = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.64, 0.72), matWeapon);
+      fist.position.set(0, 0, 0.18);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.06, 8, 20), matTrim);
+      ring.position.set(0, 0.15, 0.15);
+      wg.add(fist, ring);
+      [-1, 0, 1].forEach((ki) => {
+        const spike = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.38, 5), matAura);
+        spike.rotation.x = Math.PI / 2;
+        spike.position.set(ki * 0.18, 0, 0.68);
+        wg.add(spike);
+      });
+    });
+  } else if (hero.id === 'kimee') {
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.48, 1.35), matWeapon);
+    body.position.set(0, 0, 0.45);
+    const acidMat = new THREE.MeshStandardMaterial({ color: '#4ade80', emissive: '#4ade80', emissiveIntensity: 0.9 });
+    const tank = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.75, 12), acidMat);
+    tank.rotation.x = Math.PI / 2;
+    tank.position.set(0, 0.42, 0.45);
+    const nozL = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.65, 10), matTrim);
+    nozL.rotation.x = Math.PI / 2;
+    nozL.position.set(-0.14, 0.05, 1.25);
+    const nozR = nozL.clone();
+    nozR.position.x = 0.14;
+    weaponGroup.add(body, tank, nozL, nozR);
+  } else if (hero.id === 'minotor') {
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.35, 10), matCoat);
+    shaft.rotation.x = Math.PI / 2;
+    shaft.position.set(0, 0, 0.75);
+    const head = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.92, 0.92), matWeapon);
+    head.position.set(0, 0, 1.62);
+    const band = new THREE.Mesh(new THREE.BoxGeometry(1.68, 0.48, 0.48), matAura);
+    band.position.set(0, 0, 1.62);
+    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.55, 5), matTrim);
+    spike.rotation.x = Math.PI / 2;
+    spike.position.set(0, 0, 2.25);
+    weaponGroup.add(shaft, head, band, spike);
+  } else if (hero.id === 'esteez') {
+    const staff = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 2.1, 10), matTrim);
     staff.rotation.x = Math.PI / 2;
-    staff.position.set(0, 0, 0.55);
-    weaponGroup.add(staff);
-
-    const orb = new THREE.Mesh(new THREE.OctahedronGeometry(0.38, 0), matAura);
-    orb.position.set(0, 0, 1.45);
-    weaponGroup.add(orb);
+    staff.position.set(0, 0, 0.65);
+    const crescent = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.08, 10, 24), matAura);
+    crescent.position.set(0, 0, 1.65);
+    weaponGroup.add(staff, crescent);
+    const tome = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.14, 0.72), matTrim);
+    tome.position.set(0, 0.25, 0.45);
+    tome.rotation.set(0.3, 0, 0.25);
+    const page = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.18, 0.64), matAura);
+    page.position.set(0, 0.3, 0.45);
+    page.rotation.set(0.3, 0, 0.25);
+    leftWeaponGroup.add(tome, page);
+  } else if (hero.id === 'masteryee') {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.04, 8, 18), matTrim);
+    ring.position.set(0, 0, -0.15);
+    const hilt = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.14, 0.18), matTrim);
+    hilt.position.set(0, 0, 0.22);
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.08, 2.05), matWeapon);
+    blade.position.set(0, 0, 1.25);
+    weaponGroup.add(ring, hilt, blade);
+    [0, 1, 2].forEach((gi) => {
+      const gem = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.14, 0.18), matAura);
+      gem.position.set(0, 0, 0.55 + gi * 0.45);
+      weaponGroup.add(gem);
+    });
+  } else if (hero.id === 'ketootoo') {
+    [weaponGroup, leftWeaponGroup].forEach((wg) => {
+      const grip = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.36, 0.28), matCoat);
+      grip.position.set(0, -0.1, 0.15);
+      const frame = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.28, 0.95), matWeapon);
+      frame.position.set(0, 0.08, 0.52);
+      const muzzle = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.42, 10), matAura);
+      muzzle.rotation.x = Math.PI / 2;
+      muzzle.position.set(0, 0.08, 0.95);
+      wg.add(grip, frame, muzzle);
+    });
+  } else if (hero.id === 'alucardox') {
+    const guard = new THREE.Mesh(new THREE.BoxGeometry(0.88, 0.18, 0.24), matTrim);
+    guard.position.set(0, 0, 0.25);
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.10, 2.45), matWeapon);
+    blade.position.set(0, 0, 1.48);
+    const core = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.14, 2.25), matAura);
+    core.position.set(0, 0, 1.45);
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.55, 4), matWeapon);
+    tip.rotation.x = Math.PI / 2;
+    tip.position.set(0, 0, 2.85);
+    weaponGroup.add(guard, blade, core, tip);
+  } else if (hero.id === 'gusionox') {
+    const mainDagger = new THREE.Mesh(new THREE.ConeGeometry(0.14, 1.25, 4), matAura);
+    mainDagger.rotation.x = Math.PI / 2;
+    mainDagger.position.set(0, 0, 0.72);
+    weaponGroup.add(mainDagger);
+    [-2, -1, 0, 1, 2].forEach((di) => {
+      const fanDagger = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.95, 4), matAura);
+      fanDagger.rotation.set(Math.PI / 2, di * 0.25, 0);
+      fanDagger.position.set(di * 0.22, 0, 0.55);
+      leftWeaponGroup.add(fanDagger);
+    });
   }
 
   rightArmPivot.add(weaponGroup);
+  leftArmPivot.add(leftWeaponGroup);
 
   root.userData = {
+    heroId: hero.id,
     leftLegPivot,
     rightLegPivot,
     leftArmPivot,
@@ -663,10 +745,12 @@ function buildRobloxHeroMesh(hero, skinOverride = null) {
     headGroup,
     torsoGroup,
     weaponGroup,
+    leftWeaponGroup,
     leftTailGroup,
     rightTailGroup,
     walkPhase: Math.random() * Math.PI * 2,
-    attackTimer: 0
+    attackTimer: 0,
+    comboStep: 0
   };
 
   return root;
@@ -675,37 +759,85 @@ function buildRobloxHeroMesh(hero, skinOverride = null) {
 function animateRobloxCharacter(mesh, dt, isMoving, isAttacking) {
   if (!mesh || !mesh.userData) return;
   const u = mesh.userData;
-  u.walkPhase += dt * (isMoving ? 12.0 : 2.6);
+  const hid = u.heroId || 'laylul';
+  let spdMult = 12.5;
+  if (hid === 'sabro' || hid === 'masteryee' || hid === 'gusionox') spdMult = 15.5;
+  else if (hid === 'minotor' || hid === 'yuzong') spdMult = 10.2;
+  else if (hid === 'kimee' || hid === 'esteez') spdMult = 8.5;
+
+  u.walkPhase += dt * (isMoving ? spdMult : 2.8);
+
+  const applyArmStance = (phaseVal) => {
+    if (hid === 'laylul' || hid === 'kimee') {
+      u.rightArmPivot.rotation.set(-0.62 - phaseVal * 0.15, -0.15, 0);
+      u.leftArmPivot.rotation.set(-0.48 - phaseVal * 0.15, 0.28, 0);
+    } else if (hid === 'ketootoo') {
+      u.rightArmPivot.rotation.set(-0.75 - phaseVal * 0.3, 0, 0);
+      u.leftArmPivot.rotation.set(-0.75 + phaseVal * 0.3, 0, 0);
+    } else if (hid === 'sabro' || hid === 'gusionox') {
+      u.rightArmPivot.rotation.set(0.45 - phaseVal * 0.4, 0, 0.25);
+      u.leftArmPivot.rotation.set(0.45 + phaseVal * 0.4, 0, -0.25);
+    } else if (hid === 'yuzong') {
+      u.rightArmPivot.rotation.set(-0.35 - phaseVal * 0.35, 0, 0.38);
+      u.leftArmPivot.rotation.set(-0.35 + phaseVal * 0.35, 0, -0.38);
+    } else if (hid === 'yeen') {
+      u.rightArmPivot.rotation.set(-0.85 - phaseVal * 0.25, -0.25, 0);
+      u.leftArmPivot.rotation.set(-0.65 + phaseVal * 0.25, 0.25, 0);
+    } else if (hid === 'minotor' || hid === 'alucardox') {
+      u.rightArmPivot.rotation.set(-0.45 - phaseVal * 0.3, 0.15, 0.18);
+      u.leftArmPivot.rotation.set(phaseVal * 0.5, 0, -0.15);
+    } else if (hid === 'esteez') {
+      u.rightArmPivot.rotation.set(-0.55 - phaseVal * 0.2, 0, 0);
+      u.leftArmPivot.rotation.set(-0.72, 0.32, 0);
+    } else if (hid === 'masteryee' || hid === 'kajee') {
+      u.rightArmPivot.rotation.set(-0.35 - phaseVal * 0.35, -0.2, 0.25);
+      u.leftArmPivot.rotation.set(phaseVal * 0.55, 0, -0.18);
+    }
+  };
 
   if (isMoving) {
     const swing = Math.sin(u.walkPhase) * 0.68;
-    u.leftLegPivot.rotation.x = swing;
-    u.rightLegPivot.rotation.x = -swing;
-    u.leftArmPivot.rotation.x = -swing * 0.8;
-    if (u.attackTimer <= 0) {
-      u.rightArmPivot.rotation.x = -0.45 + swing * 0.45;
+    if (hid === 'kimee') {
+      u.leftLegPivot.rotation.x = 0.35 + Math.sin(u.walkPhase) * 0.15;
+      u.rightLegPivot.rotation.x = 0.45 - Math.sin(u.walkPhase) * 0.15;
+      u.torsoGroup.position.y = 1.75 + Math.sin(u.walkPhase) * 0.12;
+      u.torsoGroup.rotation.x = 0.22;
+      u.headGroup.position.y = 2.72 + Math.sin(u.walkPhase) * 0.12;
+    } else if (hid === 'esteez') {
+      u.leftLegPivot.rotation.x = Math.sin(u.walkPhase) * 0.22;
+      u.rightLegPivot.rotation.x = -Math.sin(u.walkPhase) * 0.22;
+      u.torsoGroup.position.y = 1.72 + Math.sin(u.walkPhase) * 0.1;
+      u.headGroup.position.y = 2.68 + Math.sin(u.walkPhase) * 0.1;
+    } else if (hid === 'sabro' || hid === 'masteryee' || hid === 'gusionox') {
+      u.leftLegPivot.rotation.x = swing * 1.15;
+      u.rightLegPivot.rotation.x = -swing * 1.15;
+      u.torsoGroup.position.y = 1.5 + Math.abs(Math.cos(u.walkPhase)) * 0.09;
+      u.torsoGroup.rotation.x = 0.28;
+      u.headGroup.position.y = 2.48 + Math.abs(Math.cos(u.walkPhase)) * 0.09;
+    } else {
+      u.leftLegPivot.rotation.x = swing;
+      u.rightLegPivot.rotation.x = -swing;
+      const bounce = Math.abs(Math.cos(u.walkPhase)) * 0.08;
+      u.torsoGroup.position.y = 1.56 + bounce;
+      u.headGroup.position.y = 2.55 + bounce;
+      u.torsoGroup.rotation.z = Math.sin(u.walkPhase) * 0.06;
+      u.torsoGroup.rotation.x = 0.08;
     }
-    const bounce = Math.abs(Math.cos(u.walkPhase)) * 0.08;
-    u.torsoGroup.position.y = 1.55 + bounce;
-    u.headGroup.position.y = 2.52 + bounce;
-    u.torsoGroup.rotation.z = Math.sin(u.walkPhase) * 0.05;
-
+    if (u.attackTimer <= 0) applyArmStance(swing);
     if (u.leftTailGroup && u.rightTailGroup) {
-      u.leftTailGroup.rotation.x = 0.25 + Math.sin(u.walkPhase * 2) * 0.14;
-      u.rightTailGroup.rotation.x = 0.25 + Math.cos(u.walkPhase * 2) * 0.14;
+      u.leftTailGroup.rotation.x = 0.25 + Math.sin(u.walkPhase * 2) * 0.15;
+      u.rightTailGroup.rotation.x = 0.25 + Math.cos(u.walkPhase * 2) * 0.15;
     }
   } else {
-    const idleBob = Math.sin(u.walkPhase) * 0.045;
+    const idleBob = Math.sin(u.walkPhase) * (hid === 'kimee' || hid === 'esteez' ? 0.11 : 0.05);
+    const baseY = (hid === 'kimee' || hid === 'esteez') ? 1.68 : 1.56;
     u.leftLegPivot.rotation.x *= 0.84;
     u.rightLegPivot.rotation.x *= 0.84;
-    u.leftArmPivot.rotation.x = idleBob * 1.4;
-    if (u.attackTimer <= 0) {
-      u.rightArmPivot.rotation.x = -0.35 + idleBob;
-    }
-    u.torsoGroup.position.y = 1.55 + idleBob;
-    u.headGroup.position.y = 2.52 + idleBob;
+    u.torsoGroup.position.y = baseY + idleBob;
+    u.headGroup.position.y = baseY + 0.98 + idleBob;
     u.torsoGroup.rotation.z *= 0.85;
-
+    u.torsoGroup.rotation.x *= 0.85;
+    if (u.attackTimer <= 0) applyArmStance(idleBob);
     if (u.leftTailGroup && u.rightTailGroup) {
       u.leftTailGroup.rotation.z = 0.18 + Math.sin(u.walkPhase) * 0.05;
       u.rightTailGroup.rotation.z = -0.18 - Math.sin(u.walkPhase) * 0.05;
@@ -715,15 +847,48 @@ function animateRobloxCharacter(mesh, dt, isMoving, isAttacking) {
   }
 
   if (isAttacking) {
-    u.attackTimer = 0.26;
+    u.attackTimer = 0.30;
+    u.comboStep = ((u.comboStep || 0) + 1) % 2;
   }
   if (u.attackTimer > 0) {
     u.attackTimer -= dt;
-    const slashProgress = (0.26 - u.attackTimer) / 0.26;
-    u.rightArmPivot.rotation.x = -1.45 + Math.sin(slashProgress * Math.PI * 2) * 0.75;
-    u.torsoGroup.rotation.y = Math.sin(slashProgress * Math.PI) * 0.28;
+    const p = Math.max(0, Math.min(1, (0.30 - u.attackTimer) / 0.30));
+    const wave = Math.sin(p * Math.PI);
+    if (hid === 'laylul' || hid === 'kimee') {
+      u.rightArmPivot.rotation.x = -0.62 - wave * 0.45;
+      u.leftArmPivot.rotation.x = -0.48 - wave * 0.45;
+      u.torsoGroup.position.z = -wave * 0.18;
+    } else if (hid === 'ketootoo') {
+      if (u.comboStep === 0) u.rightArmPivot.rotation.x = -0.95 - wave * 0.55;
+      else u.leftArmPivot.rotation.x = -0.95 - wave * 0.55;
+      u.torsoGroup.rotation.y = (u.comboStep === 0 ? 0.25 : -0.25) * wave;
+    } else if (hid === 'sabro' || hid === 'gusionox') {
+      u.rightArmPivot.rotation.x = -1.45 + p * 2.2;
+      u.leftArmPivot.rotation.x = -1.45 + p * 2.2;
+      u.torsoGroup.rotation.y = Math.sin(p * Math.PI * 2) * 0.55;
+    } else if (hid === 'yuzong' || hid === 'yeen') {
+      if (u.comboStep === 0) {
+        u.rightArmPivot.rotation.x = -1.6 + p * 2.3;
+        u.torsoGroup.rotation.y = wave * 0.48;
+      } else {
+        u.leftArmPivot.rotation.x = -1.6 + p * 2.3;
+        u.torsoGroup.rotation.y = -wave * 0.48;
+      }
+    } else if (hid === 'minotor' || hid === 'alucardox') {
+      u.rightArmPivot.rotation.x = -2.1 + p * 2.8;
+      u.leftArmPivot.rotation.x = -1.6 + p * 2.2;
+      u.torsoGroup.rotation.x = wave * 0.35;
+    } else if (hid === 'kajee') {
+      u.rightArmPivot.rotation.y = -0.8 + p * 1.8;
+      u.rightArmPivot.rotation.x = -0.9;
+      u.torsoGroup.rotation.y = wave * 0.52;
+    } else {
+      u.rightArmPivot.rotation.x = -1.6 + p * 2.4;
+      u.torsoGroup.rotation.y = (u.comboStep === 0 ? 0.55 : -0.55) * wave;
+    }
   } else {
-    u.torsoGroup.rotation.y *= 0.85;
+    u.torsoGroup.rotation.y *= 0.82;
+    u.torsoGroup.position.z *= 0.82;
   }
 }
 
