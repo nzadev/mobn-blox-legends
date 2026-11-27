@@ -230,145 +230,41 @@ class SoundEngine {
 
 window.SFX = new SoundEngine();
 
+const _texLoader = (typeof THREE !== 'undefined' && THREE.TextureLoader) ? new THREE.TextureLoader() : null;
+const _faceTexCache = {};
+const _torsoTexCache = {};
+
 function makeFaceTexture(skinHex, hairHex, heroId = '') {
+  if (_texLoader && heroId && !_faceTexCache[heroId]) {
+    _faceTexCache[heroId] = _texLoader.load(`assets/textures/faces/${heroId}_face.png?v=3`);
+  }
+  if (_faceTexCache[heroId]) {
+    return _faceTexCache[heroId];
+  }
   const canvas = document.createElement('canvas');
   canvas.width = 256;
   canvas.height = 256;
   const ctx = canvas.getContext('2d');
-
   ctx.fillStyle = skinHex || '#f8d2b4';
   ctx.fillRect(0, 0, 256, 256);
-
-  if (heroId === 'minotor') {
-    // Bull snout & fierce glowing yellow eyes (exact match to 0:15 Minotor card!)
-    ctx.fillStyle = '#fde047';
-    ctx.fillRect(46, 92, 48, 28);
-    ctx.fillRect(162, 92, 48, 28);
-    ctx.fillStyle = '#7c2d12';
-    ctx.fillRect(68, 140, 120, 74);
-    // Golden bull nose ring
-    ctx.strokeStyle = '#facc15';
-    ctx.lineWidth = 12;
-    ctx.beginPath();
-    ctx.arc(128, 198, 28, 0, Math.PI * 2);
-    ctx.stroke();
-  } else if (heroId === 'yuzong') {
-    // Dark fierce grey face with glowing crimson visor eyes (exact match to 0:14 Yu Zong!)
-    ctx.fillStyle = '#09090b';
-    ctx.fillRect(36, 88, 184, 42);
-    ctx.fillStyle = '#e11d48';
-    ctx.shadowColor = '#f43f5e';
-    ctx.shadowBlur = 16;
-    ctx.fillRect(50, 98, 56, 20);
-    ctx.fillRect(150, 98, 56, 20);
-    ctx.shadowBlur = 0;
-    // Scar / Frown
-    ctx.strokeStyle = '#e11d48';
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.moveTo(96, 186);
-    ctx.lineTo(160, 182);
-    ctx.stroke();
-  } else {
-    // Detailed Anime Roblox Eyes (exact match to 0:00 Laylul & Kimee/Esteez/Yeen)
-    ctx.fillStyle = 'rgba(244, 114, 182, 0.35)';
-    ctx.beginPath();
-    ctx.ellipse(58, 162, 22, 11, 0, 0, Math.PI * 2);
-    ctx.ellipse(198, 162, 22, 11, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Golden/Dark Eyebrows
-    ctx.strokeStyle = heroId === 'laylul' ? '#b45309' : '#1e293b';
-    ctx.lineWidth = 9;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(46, 86); ctx.quadraticCurveTo(74, 76, 98, 88);
-    ctx.moveTo(158, 88); ctx.quadraticCurveTo(182, 76, 210, 86);
-    ctx.stroke();
-
-    // Big Sparkling Blue Anime Eyes
-    const irisColor = heroId === 'yeen' ? '#f59e0b' : (heroId === 'esteez' ? '#38bdf8' : '#0284c7');
-    [74, 182].forEach((cx) => {
-      // Upper eyelashes
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(cx - 28, 100, 56, 10);
-      // Sclera
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(cx - 24, 108, 48, 42);
-      // Outer iris
-      ctx.fillStyle = '#0c4a6e';
-      ctx.fillRect(cx - 18, 110, 36, 38);
-      // Inner bright iris
-      ctx.fillStyle = irisColor;
-      ctx.fillRect(cx - 14, 116, 28, 30);
-      // Pupil
-      ctx.fillStyle = '#082f49';
-      ctx.fillRect(cx - 7, 122, 14, 18);
-      // Anime eye sparkles
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(cx - 14, 112, 11, 11);
-      ctx.fillRect(cx + 6, 132, 7, 7);
-    });
-
-    // Cute confident smile
-    ctx.strokeStyle = '#9a3412';
-    ctx.lineWidth = 7;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.arc(128, 174, 18, 0.18 * Math.PI, 0.82 * Math.PI);
-    ctx.stroke();
-  }
-
   const tex = new THREE.CanvasTexture(canvas);
   tex.needsUpdate = true;
   return tex;
 }
 
 function makeTorsoTexture(hero, c) {
+  if (_texLoader && hero && hero.id && !_torsoTexCache[hero.id]) {
+    _torsoTexCache[hero.id] = _texLoader.load(`assets/textures/torsos/${hero.id}_torso.png?v=3`);
+  }
+  if (hero && _torsoTexCache[hero.id]) {
+    return _torsoTexCache[hero.id];
+  }
   const canvas = document.createElement('canvas');
   canvas.width = 256;
   canvas.height = 256;
   const ctx = canvas.getContext('2d');
-
   ctx.fillStyle = c.torso;
   ctx.fillRect(0, 0, 256, 256);
-
-  if (hero.id === 'laylul') {
-    // Exact match to 0:00 Laylul's white/lilac corset, vertical purple-gold pleats, and golden waist belt!
-    ctx.fillStyle = '#d8cfe8';
-    ctx.fillRect(0, 0, 62, 256);
-    ctx.fillRect(194, 0, 62, 256);
-
-    // Vertical lilac/purple stripes on top bodice
-    const stripeColors = ['#6b21a8', '#a855f7', '#d97706', '#6b21a8'];
-    for (let i = 0; i < 4; i++) {
-      ctx.fillStyle = stripeColors[i];
-      ctx.fillRect(72 + i * 28, 18, 18, 92);
-    }
-
-    // Golden corset trim frames
-    ctx.strokeStyle = '#d97706';
-    ctx.lineWidth = 10;
-    ctx.strokeRect(64, 12, 128, 108);
-
-    // Dark purple lower vest + gold buttons
-    ctx.fillStyle = '#3b0764';
-    ctx.fillRect(68, 125, 120, 100);
-    ctx.fillStyle = '#facc15';
-    ctx.fillRect(0, 198, 256, 26);
-    ctx.fillStyle = '#38bdf8';
-    ctx.fillRect(112, 194, 32, 34);
-  } else {
-    // Royal armor / jacket trim details
-    ctx.fillStyle = c.coat;
-    ctx.fillRect(0, 0, 68, 256);
-    ctx.fillRect(188, 0, 68, 256);
-    ctx.fillStyle = c.trim;
-    ctx.fillRect(62, 0, 12, 256);
-    ctx.fillRect(182, 0, 12, 256);
-    ctx.fillRect(0, 206, 256, 24);
-  }
-
   const tex = new THREE.CanvasTexture(canvas);
   tex.needsUpdate = true;
   return tex;
@@ -384,160 +280,243 @@ function buildRobloxHeroMesh(hero, skinOverride = null) {
 
   const root = new THREE.Group();
 
-  const matSkin = new THREE.MeshStandardMaterial({ color: c.skin, roughness: 0.42, metalness: 0.05 });
-  const matHair = new THREE.MeshStandardMaterial({ color: c.hair, roughness: 0.38, metalness: 0.12 });
-  const matCoat = new THREE.MeshStandardMaterial({ color: c.coat, roughness: 0.45, metalness: 0.22 });
+  const matSkin = new THREE.MeshStandardMaterial({ color: c.skin, roughness: 0.38, metalness: 0.06 });
+  const matHair = new THREE.MeshStandardMaterial({ color: c.hair, roughness: 0.34, metalness: 0.16 });
+  const matCoat = new THREE.MeshStandardMaterial({ color: c.coat, roughness: 0.4, metalness: 0.28 });
   const matTrim = new THREE.MeshStandardMaterial({
     color: c.trim,
-    roughness: 0.28,
-    metalness: 0.68,
+    roughness: 0.22,
+    metalness: 0.78,
     emissive: c.trim,
-    emissiveIntensity: 0.18
+    emissiveIntensity: 0.32
   });
-  const matPants = new THREE.MeshStandardMaterial({ color: c.pants, roughness: 0.58 });
+  const matAura = new THREE.MeshStandardMaterial({
+    color: c.aura,
+    roughness: 0.15,
+    metalness: 0.4,
+    emissive: c.aura,
+    emissiveIntensity: 0.9
+  });
+  const matPants = new THREE.MeshStandardMaterial({ color: c.pants, roughness: 0.52 });
   const matWeapon = new THREE.MeshStandardMaterial({
     color: c.weaponColor,
-    roughness: 0.25,
-    metalness: 0.78,
+    roughness: 0.2,
+    metalness: 0.85,
     emissive: c.weaponColor,
-    emissiveIntensity: 0.25
+    emissiveIntensity: 0.4
   });
 
   const faceTex = makeFaceTexture(c.skin, c.hair, hero.id);
   const headMaterials = [
     matSkin, matSkin, matSkin, matSkin,
-    new THREE.MeshStandardMaterial({ map: faceTex, roughness: 0.42 }),
+    new THREE.MeshStandardMaterial({ map: faceTex, roughness: 0.38 }),
     matSkin
   ];
 
   const torsoTex = makeTorsoTexture(hero, c);
   const torsoMaterials = [
     matCoat, matCoat, matCoat, matCoat,
-    new THREE.MeshStandardMaterial({ map: torsoTex, roughness: 0.45 }),
+    new THREE.MeshStandardMaterial({ map: torsoTex, roughness: 0.4 }),
     matCoat
   ];
 
-  // Legs (pivoted at hip y = 1.0)
-  const leftLegPivot = new THREE.Group();
-  leftLegPivot.position.set(-0.27, 1.0, 0);
-  const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.47, 1.0, 0.47), matPants);
-  leftLeg.position.y = -0.5;
-  leftLeg.castShadow = true;
-  leftLegPivot.add(leftLeg);
+  // Sculpted Armored Legs with Knee Guards & Heavy Greaves
+  const buildLeg = (xPos) => {
+    const legPivot = new THREE.Group();
+    legPivot.position.set(xPos, 1.02, 0);
 
-  const leftBoot = new THREE.Mesh(new THREE.BoxGeometry(0.51, 0.3, 0.53), matCoat);
-  leftBoot.position.set(0, -0.86, 0.02);
-  leftLegPivot.add(leftBoot);
-  const leftSole = new THREE.Mesh(new THREE.BoxGeometry(0.53, 0.1, 0.55), matTrim);
-  leftSole.position.set(0, -0.98, 0.02);
-  leftLegPivot.add(leftSole);
-  root.add(leftLegPivot);
+    const thigh = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.54, 0.46), matPants);
+    thigh.position.y = -0.26;
+    thigh.castShadow = true;
+    legPivot.add(thigh);
 
-  const rightLegPivot = new THREE.Group();
-  rightLegPivot.position.set(0.27, 1.0, 0);
-  const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.47, 1.0, 0.47), matPants);
-  rightLeg.position.y = -0.5;
-  rightLeg.castShadow = true;
-  rightLegPivot.add(rightLeg);
+    // Metallic Knee Guard
+    const knee = new THREE.Mesh(new THREE.BoxGeometry(0.49, 0.2, 0.52), matTrim);
+    knee.position.set(0, -0.52, 0.04);
+    legPivot.add(knee);
 
-  const rightBoot = new THREE.Mesh(new THREE.BoxGeometry(0.51, 0.3, 0.53), matCoat);
-  rightBoot.position.set(0, -0.86, 0.02);
-  rightLegPivot.add(rightBoot);
-  const rightSole = new THREE.Mesh(new THREE.BoxGeometry(0.53, 0.1, 0.55), matTrim);
-  rightSole.position.set(0, -0.98, 0.02);
-  rightLegPivot.add(rightSole);
-  root.add(rightLegPivot);
+    // Armored Shin Greave
+    const shin = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.46, 0.52), matCoat);
+    shin.position.set(0, -0.78, 0.01);
+    shin.castShadow = true;
+    legPivot.add(shin);
 
-  // Torso (R6 Blocky Chest + Custom Corset/Armor Texture)
+    // Boot & Glowing Sole Trim
+    const sole = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.12, 0.6), matTrim);
+    sole.position.set(0, -0.97, 0.04);
+    legPivot.add(sole);
+
+    return legPivot;
+  };
+
+  const leftLegPivot = buildLeg(-0.28);
+  const rightLegPivot = buildLeg(0.28);
+  root.add(leftLegPivot, rightLegPivot);
+
+  // Sculpted Armored Torso + 3D Chest Core + Pauldrons + Waist Tassets + Hero Back Attachments
   const torsoGroup = new THREE.Group();
-  torsoGroup.position.set(0, 1.55, 0);
-  const torsoMesh = new THREE.Mesh(new THREE.BoxGeometry(1.06, 1.1, 0.54), torsoMaterials);
+  torsoGroup.position.set(0, 1.56, 0);
+  const torsoMesh = new THREE.Mesh(new THREE.BoxGeometry(1.08, 1.12, 0.56), torsoMaterials);
   torsoMesh.castShadow = true;
   torsoGroup.add(torsoMesh);
 
-  // Collar / Shoulder pauldrons
-  const collarL = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.22, 0.62), matCoat);
-  collarL.position.set(-0.36, 0.48, 0.02);
-  torsoGroup.add(collarL);
-  const collarR = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.22, 0.62), matCoat);
-  collarR.position.set(0.36, 0.48, 0.02);
-  torsoGroup.add(collarR);
+  // 3D Chest Breastplate & Glowing Power Core Diamond
+  const chestPlate = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.52, 0.12), matCoat);
+  chestPlate.position.set(0, 0.16, 0.28);
+  torsoGroup.add(chestPlate);
 
-  // Coattails / Cape for Yu Zong, Esteez, Kajee, Laylul
-  if (hero.id === 'laylul' || hero.id === 'yuzong' || hero.id === 'esteez' || hero.id === 'kajee') {
-    const cape = new THREE.Mesh(new THREE.BoxGeometry(1.12, 1.35, 0.12), matCoat);
+  const coreGem = new THREE.Mesh(new THREE.OctahedronGeometry(0.18, 0), matAura);
+  coreGem.position.set(0, 0.16, 0.35);
+  torsoGroup.add(coreGem);
+
+  // Tactical Waist Belt & Side Armor Tassets
+  const belt = new THREE.Mesh(new THREE.BoxGeometry(1.14, 0.18, 0.62), matTrim);
+  belt.position.set(0, -0.44, 0);
+  torsoGroup.add(belt);
+
+  [-0.56, 0.56].forEach((tx) => {
+    const tasset = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.46, 0.58), matCoat);
+    tasset.position.set(tx, -0.62, 0);
+    tasset.rotation.z = tx < 0 ? 0.18 : -0.18;
+    torsoGroup.add(tasset);
+  });
+
+  // Layered Angled Shoulder Pauldrons with Spikes
+  [-1, 1].forEach((dir) => {
+    const pauldron = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.28, 0.68), matTrim);
+    pauldron.position.set(dir * 0.54, 0.48, 0.02);
+    pauldron.rotation.z = dir * -0.22;
+    torsoGroup.add(pauldron);
+
+    const fin = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.38, 4), matAura);
+    fin.position.set(dir * 0.66, 0.66, 0.02);
+    fin.rotation.z = dir * -0.45;
+    torsoGroup.add(fin);
+  });
+
+  // Hero-Specific 3D Back Attachments (Dragon Wings, Jetpack, Cyber Thrusters, Lunar Halo, Royal Cape)
+  if (hero.id === 'yuzong') {
+    [-1, 1].forEach((dir) => {
+      const wingGroup = new THREE.Group();
+      wingGroup.position.set(dir * 0.25, 0.22, -0.32);
+      for (let i = 0; i < 3; i++) {
+        const bone = new THREE.Mesh(new THREE.BoxGeometry(0.16, 1.15 - i * 0.22, 0.14), matTrim);
+        bone.position.set(dir * (0.38 + i * 0.34), 0.25 - i * 0.15, -0.12 - i * 0.05);
+        bone.rotation.z = dir * (-0.55 - i * 0.25);
+        wingGroup.add(bone);
+      }
+      torsoGroup.add(wingGroup);
+    });
+  } else if (hero.id === 'kimee') {
+    // Alchemist Twin-Turbine Jetpack
+    [-0.28, 0.28].forEach((jx) => {
+      const tank = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, 0.88, 12), matTrim);
+      tank.position.set(jx, 0.05, -0.45);
+      torsoGroup.add(tank);
+      const flame = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.42, 8), matAura);
+      flame.position.set(jx, -0.52, -0.45);
+      flame.rotation.x = Math.PI;
+      torsoGroup.add(flame);
+    });
+  } else if (hero.id === 'esteez' || hero.id === 'kajee') {
+    // Floating Celestial Halo Ring behind Back
+    const halo = new THREE.Mesh(new THREE.TorusGeometry(0.95, 0.07, 10, 32), matAura);
+    halo.position.set(0, 0.55, -0.42);
+    torsoGroup.add(halo);
+    const cape = new THREE.Mesh(new THREE.BoxGeometry(1.16, 1.45, 0.1), matCoat);
     cape.position.set(0, -0.45, -0.32);
-    cape.rotation.x = 0.12;
+    cape.rotation.x = 0.16;
+    torsoGroup.add(cape);
+  } else if (hero.id === 'sabro' || hero.id === 'masteryee' || hero.id === 'gusionox') {
+    // Cyber Scarf / Back Blade Wings
+    [-1, 1].forEach((dir) => {
+      const vane = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.1, 0.28), matAura);
+      vane.position.set(dir * 0.48, 0.28, -0.42);
+      vane.rotation.z = dir * -0.42;
+      vane.rotation.x = -0.25;
+      torsoGroup.add(vane);
+    });
+  } else {
+    const cape = new THREE.Mesh(new THREE.BoxGeometry(1.14, 1.38, 0.1), matCoat);
+    cape.position.set(0, -0.45, -0.32);
+    cape.rotation.x = 0.14;
     torsoGroup.add(cape);
   }
 
   root.add(torsoGroup);
 
-  // Head
+  // Sculpted Anime Head + 3D Spiky Hair / Crown / Horns / Visor
   const headGroup = new THREE.Group();
-  headGroup.position.set(0, 2.52, 0);
-  const headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.86, 0.86), headMaterials);
+  headGroup.position.set(0, 2.55, 0);
+  const headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.88, 0.88, 0.88), headMaterials);
   headMesh.castShadow = true;
   headGroup.add(headMesh);
 
-  // Sculpted Hair Cap & Side Locks (matching 0:00 Laylul's parted bangs & side hair!)
-  const hairTop = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.3, 0.96), matHair);
-  hairTop.position.set(0, 0.38, 0);
+  // Sculpted Multi-Piece Hair Crown & Anime Bangs
+  const hairTop = new THREE.Mesh(new THREE.BoxGeometry(0.98, 0.34, 0.98), matHair);
+  hairTop.position.set(0, 0.4, 0);
   headGroup.add(hairTop);
 
-  const hairBack = new THREE.Mesh(new THREE.BoxGeometry(0.94, 0.84, 0.24), matHair);
-  hairBack.position.set(0, 0.04, -0.38);
+  const hairBack = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.88, 0.28), matHair);
+  hairBack.position.set(0, 0.04, -0.4);
   headGroup.add(hairBack);
 
+  // 3D Anime Spikes on top/back
+  for (let i = -1; i <= 1; i++) {
+    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.56, 4), matHair);
+    spike.position.set(i * 0.32, 0.68, -0.12);
+    spike.rotation.z = i * -0.32;
+    spike.rotation.x = -0.28;
+    headGroup.add(spike);
+  }
+
   // Side face-framing hair locks
-  [-0.44, 0.44].forEach((sx) => {
-    const sideLock = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.78, 0.32), matHair);
-    sideLock.position.set(sx, -0.04, 0.28);
+  [-0.46, 0.46].forEach((sx) => {
+    const sideLock = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.84, 0.34), matHair);
+    sideLock.position.set(sx, -0.06, 0.28);
     headGroup.add(sideLock);
   });
 
-  // Front parted bangs
-  const bangL = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.24, 0.18), matHair);
-  bangL.position.set(-0.24, 0.28, 0.43);
-  bangL.rotation.z = 0.18;
-  headGroup.add(bangL);
-
-  const bangR = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.24, 0.18), matHair);
-  bangR.position.set(0.24, 0.28, 0.43);
-  bangR.rotation.z = -0.18;
-  headGroup.add(bangR);
+  // Front parted anime bangs
+  [-1, 1].forEach((dir) => {
+    const bang = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.28, 0.2), matHair);
+    bang.position.set(dir * 0.24, 0.28, 0.44);
+    bang.rotation.z = dir * -0.22;
+    headGroup.add(bang);
+  });
 
   let leftTailGroup = null;
   let rightTailGroup = null;
 
   if (c.hairStyle === 'twintails') {
-    // Laylul's iconic massive curving floor-length golden twintails + blue ribbon bows (0:00 in Reel!)
-    const bowMat = new THREE.MeshStandardMaterial({ color: '#0284c7', roughness: 0.3 });
+    // Laylul's tactical visor goggles + dynamic flowing golden twintails
+    const goggles = new THREE.Mesh(new THREE.BoxGeometry(0.94, 0.22, 0.36), matAura);
+    goggles.position.set(0, 0.42, 0.36);
+    headGroup.add(goggles);
+
+    const bowMat = new THREE.MeshStandardMaterial({ color: '#0284c7', roughness: 0.25, metalness: 0.4 });
     [-1, 1].forEach((dir) => {
-      const bow = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.28, 0.32), bowMat);
-      bow.position.set(dir * 0.56, 0.34, -0.05);
+      const bow = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.3, 0.36), bowMat);
+      bow.position.set(dir * 0.58, 0.36, -0.05);
       bow.rotation.z = dir * 0.25;
       headGroup.add(bow);
 
       const tGroup = new THREE.Group();
-      tGroup.position.set(dir * 0.64, 0.32, -0.08);
-      tGroup.rotation.z = dir * -0.18;
+      tGroup.position.set(dir * 0.66, 0.34, -0.08);
+      tGroup.rotation.z = dir * -0.2;
 
-      const seg1 = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.95, 0.36), matHair);
-      seg1.position.set(dir * 0.08, -0.42, 0);
-      seg1.castShadow = true;
+      const seg1 = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.98, 0.38), matHair);
+      seg1.position.set(dir * 0.08, -0.44, 0);
       tGroup.add(seg1);
 
-      const seg2 = new THREE.Mesh(new THREE.BoxGeometry(0.42, 1.15, 0.42), matHair);
-      seg2.position.set(dir * 0.2, -1.35, 0.05);
-      seg2.rotation.z = dir * 0.08;
-      seg2.castShadow = true;
+      const seg2 = new THREE.Mesh(new THREE.BoxGeometry(0.44, 1.18, 0.44), matHair);
+      seg2.position.set(dir * 0.22, -1.38, 0.06);
+      seg2.rotation.z = dir * 0.1;
       tGroup.add(seg2);
 
-      const seg3 = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.9, 0.34), matHair);
-      seg3.position.set(dir * 0.26, -2.22, 0.12);
-      seg3.rotation.z = dir * 0.15;
-      seg3.castShadow = true;
+      const seg3 = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.95, 5), matHair);
+      seg3.position.set(dir * 0.3, -2.25, 0.12);
+      seg3.rotation.x = Math.PI;
       tGroup.add(seg3);
 
       headGroup.add(tGroup);
@@ -545,96 +524,132 @@ function buildRobloxHeroMesh(hero, skinOverride = null) {
       else rightTailGroup = tGroup;
     });
   } else if (c.hairStyle === 'horns' || c.hairStyle === 'bull_horns') {
-    const hornLen = c.hairStyle === 'bull_horns' ? 0.72 : 0.58;
-    [-0.46, 0.46].forEach((hx) => {
-      const horn = new THREE.Mesh(new THREE.BoxGeometry(0.2, hornLen, 0.2), matTrim);
-      horn.position.set(hx, 0.55, 0.05);
-      horn.rotation.z = hx < 0 ? 0.38 : -0.38;
-      headGroup.add(horn);
+    const isBull = c.hairStyle === 'bull_horns';
+    [-1, 1].forEach((dir) => {
+      const hornBase = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.48, 0.24), matTrim);
+      hornBase.position.set(dir * 0.52, 0.46, 0.05);
+      hornBase.rotation.z = dir * -0.48;
+      headGroup.add(hornBase);
+
+      const hornTip = new THREE.Mesh(new THREE.ConeGeometry(0.18, isBull ? 0.85 : 0.72, 5), matAura);
+      hornTip.position.set(dir * 0.74, 0.88, 0.08);
+      hornTip.rotation.z = dir * (isBull ? 0.15 : -0.25);
+      headGroup.add(hornTip);
     });
   } else if (c.hairStyle === 'cyber_helm' || c.hairStyle === 'goggles_helm') {
-    // Sabro's full cyber samurai helmet with red central crest and glowing visor (0:15 left card!)
-    const visor = new THREE.Mesh(
-      new THREE.BoxGeometry(0.92, 0.24, 0.92),
-      new THREE.MeshStandardMaterial({ color: c.trim, emissive: c.trim, emissiveIntensity: 0.95 })
-    );
-    visor.position.set(0, 0.08, 0.04);
+    const visor = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.26, 0.96), matAura);
+    visor.position.set(0, 0.08, 0.05);
     headGroup.add(visor);
 
-    const crest = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.48, 0.65), matTrim);
-    crest.position.set(0, 0.56, 0.1);
+    const crest = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.62, 0.82), matTrim);
+    crest.position.set(0, 0.62, 0.08);
     headGroup.add(crest);
   } else if (c.hairStyle === 'elf_crown' || c.hairStyle === 'bird_crest') {
-    const crown = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.38, 0.22), matTrim);
-    crown.position.set(0, 0.56, 0.38);
-    headGroup.add(crown);
+    for (let i = -1; i <= 1; i++) {
+      const prong = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.56 - Math.abs(i) * 0.12, 4), matTrim);
+      prong.position.set(i * 0.26, 0.68, 0.38);
+      headGroup.add(prong);
+    }
   }
 
   root.add(headGroup);
 
-  // Arms (pivoted at shoulder y = 2.0) with layered jacket sleeves & cuffs
+  // Armored Arms with Vambrace Gauntlets
   const buildArm = (xOffset) => {
     const pivot = new THREE.Group();
-    pivot.position.set(xOffset, 2.0, 0);
+    pivot.position.set(xOffset, 2.02, 0);
 
-    const sleeve = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.68, 0.54), matCoat);
-    sleeve.position.y = -0.26;
+    const sleeve = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.52, 0.52), matCoat);
+    sleeve.position.y = -0.22;
     sleeve.castShadow = true;
     pivot.add(sleeve);
 
-    const cuff = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.14, 0.56), matTrim);
-    cuff.position.y = -0.58;
-    pivot.add(cuff);
+    const vambrace = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.36, 0.56), matTrim);
+    vambrace.position.y = -0.56;
+    pivot.add(vambrace);
 
-    const hand = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.45, 0.42), matSkin);
-    hand.position.y = -0.82;
+    const hand = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.38, 0.42), matSkin);
+    hand.position.y = -0.84;
     hand.castShadow = true;
     pivot.add(hand);
 
     return pivot;
   };
 
-  const leftArmPivot = buildArm(-0.8);
-  const rightArmPivot = buildArm(0.8);
+  const leftArmPivot = buildArm(-0.82);
+  const rightArmPivot = buildArm(0.82);
   root.add(leftArmPivot, rightArmPivot);
 
-  // Signature Weapons
+  // High-Detail Signature 3D Weapons
   const weaponGroup = new THREE.Group();
-  weaponGroup.position.set(0, -0.92, 0.35);
+  weaponGroup.position.set(0, -0.9, 0.38);
 
   if (c.weapon === 'cannon' || c.weapon === 'splat_gun') {
-    const barrel = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.44, 1.65), matWeapon);
-    barrel.position.set(0, 0, 0.5);
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.56, 1.5), matWeapon);
+    body.position.set(0, 0, 0.45);
+    weaponGroup.add(body);
+
+    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.26, 1.85, 12), matTrim);
+    barrel.rotation.x = Math.PI / 2;
+    barrel.position.set(0, 0.08, 0.95);
     weaponGroup.add(barrel);
-    const core = new THREE.Mesh(
-      new THREE.BoxGeometry(0.54, 0.54, 0.48),
-      new THREE.MeshStandardMaterial({ color: c.trim, emissive: c.trim, emissiveIntensity: 0.7 })
-    );
-    core.position.set(0, 0, 0.12);
-    weaponGroup.add(core);
+
+    const muzzleRing = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.06, 8, 24), matAura);
+    muzzleRing.position.set(0, 0.08, 1.75);
+    weaponGroup.add(muzzleRing);
+
     rightArmPivot.rotation.x = -0.55;
   } else if (c.weapon === 'giant_hammer') {
-    const shaft = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.18, 1.8), matCoat);
-    shaft.position.set(0, 0, 0.48);
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 2.2, 10), matCoat);
+    shaft.rotation.x = Math.PI / 2;
+    shaft.position.set(0, 0, 0.65);
     weaponGroup.add(shaft);
-    const head = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.7, 0.7), matWeapon);
-    head.position.set(0, 0, 1.25);
+
+    const head = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.85, 0.85), matWeapon);
+    head.position.set(0, 0, 1.48);
     weaponGroup.add(head);
+
+    const trimCap = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.45, 0.45), matAura);
+    trimCap.position.set(0, 0, 1.48);
+    weaponGroup.add(trimCap);
     rightArmPivot.rotation.x = -0.45;
   } else if (c.weapon === 'dual_blades' || c.weapon === 'katana' || c.weapon === 'greatsword') {
-    const bladeW = c.weapon === 'greatsword' ? 0.3 : 0.14;
-    const bladeL = c.weapon === 'greatsword' ? 1.95 : 1.55;
+    const isGreat = c.weapon === 'greatsword';
+    const hilt = new THREE.Mesh(new THREE.BoxGeometry(isGreat ? 0.72 : 0.42, 0.14, 0.18), matTrim);
+    hilt.position.set(0, 0, 0.22);
+    weaponGroup.add(hilt);
+
+    const bladeW = isGreat ? 0.36 : 0.16;
+    const bladeL = isGreat ? 2.25 : 1.75;
     const blade = new THREE.Mesh(new THREE.BoxGeometry(bladeW, 0.08, bladeL), matWeapon);
-    blade.position.set(0, 0, bladeL * 0.48);
+    blade.position.set(0, 0, 0.25 + bladeL * 0.5);
     weaponGroup.add(blade);
+
+    const edge = new THREE.Mesh(new THREE.BoxGeometry(bladeW * 0.5, 0.11, bladeL * 0.92), matAura);
+    edge.position.set(0, 0, 0.25 + bladeL * 0.5);
+    weaponGroup.add(edge);
+
     if (c.weapon === 'dual_blades') {
-      const leftBlade = blade.clone();
-      leftBlade.position.set(0, -0.92, 0.72);
+      const leftBlade = weaponGroup.clone();
       leftArmPivot.add(leftBlade);
     }
+  } else if (c.weapon === 'dragon_claws' || c.weapon === 'gauntlets') {
+    [-1, 0, 1].forEach((ci) => {
+      const claw = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.75, 4), matAura);
+      claw.rotation.x = Math.PI / 2;
+      claw.position.set(ci * 0.16, 0, 0.45);
+      weaponGroup.add(claw);
+    });
+    const leftClaw = weaponGroup.clone();
+    leftArmPivot.add(leftClaw);
   } else {
-    const orb = new THREE.Mesh(new THREE.OctahedronGeometry(0.35, 0), matWeapon);
-    orb.position.set(0, 0, 0.48);
+    const staff = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.85, 10), matTrim);
+    staff.rotation.x = Math.PI / 2;
+    staff.position.set(0, 0, 0.55);
+    weaponGroup.add(staff);
+
+    const orb = new THREE.Mesh(new THREE.OctahedronGeometry(0.38, 0), matAura);
+    orb.position.set(0, 0, 1.45);
     weaponGroup.add(orb);
   }
 
@@ -713,6 +728,9 @@ function animateRobloxCharacter(mesh, dt, isMoving, isAttacking) {
 }
 
 function renderPortraitDataURL(hero, skinOverride = null) {
+  if (!skinOverride || skinOverride.id === 'default') {
+    return `assets/portraits/${hero.id}.png?v=3`;
+  }
   const c = Object.assign({}, hero.colors);
   if (skinOverride) {
     c.coat = skinOverride.coat || c.coat;
@@ -740,65 +758,29 @@ function renderPortraitDataURL(hero, skinOverride = null) {
   ctx.fillStyle = rad;
   ctx.fillRect(0, 0, 180, 200);
 
-  // Twintails if Laylul
   if (c.hairStyle === 'twintails') {
     ctx.fillStyle = c.hair;
     ctx.fillRect(14, 48, 28, 145);
     ctx.fillRect(138, 48, 28, 145);
-    ctx.fillStyle = '#0284c7';
-    ctx.fillRect(26, 40, 20, 16);
-    ctx.fillRect(134, 40, 20, 16);
   }
 
-  // Shoulders / Coat
   ctx.fillStyle = c.coat;
   ctx.fillRect(28, 118, 124, 82);
-  ctx.fillStyle = c.torso;
-  ctx.fillRect(58, 118, 64, 82);
   ctx.fillStyle = c.trim;
   ctx.fillRect(50, 118, 10, 82);
   ctx.fillRect(120, 118, 10, 82);
 
-  // Head block
   ctx.fillStyle = c.skin;
   ctx.fillRect(50, 42, 80, 74);
-
-  // Hair cap
   ctx.fillStyle = c.hair;
   ctx.fillRect(46, 26, 88, 26);
 
-  if (c.hairStyle === 'horns' || c.hairStyle === 'bull_horns') {
-    ctx.fillStyle = c.trim;
-    ctx.fillRect(36, 10, 16, 28);
-    ctx.fillRect(128, 10, 16, 28);
-  } else if (c.hairStyle === 'cyber_helm' || c.hairStyle === 'goggles_helm') {
-    ctx.fillStyle = c.trim;
-    ctx.fillRect(48, 66, 84, 18);
-  }
-
-  // Anime Eyes
-  if (hero.id === 'yuzong') {
-    ctx.fillStyle = '#e11d48';
-    ctx.fillRect(58, 72, 22, 10);
-    ctx.fillRect(100, 72, 22, 10);
-  } else {
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(62, 68, 16, 18);
-    ctx.fillRect(102, 68, 16, 18);
-    ctx.fillStyle = '#38bdf8';
-    ctx.fillRect(64, 72, 12, 12);
-    ctx.fillRect(104, 72, 12, 12);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(64, 70, 5, 5);
-    ctx.fillRect(104, 70, 5, 5);
-  }
-
-  // Smile
-  ctx.strokeStyle = '#7c2d12';
-  ctx.lineWidth = 3.5;
-  ctx.beginPath();
-  ctx.arc(90, 98, 8, 0.15 * Math.PI, 0.85 * Math.PI);
-  ctx.stroke();
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(62, 68, 16, 18);
+  ctx.fillRect(102, 68, 16, 18);
+  ctx.fillStyle = c.trim;
+  ctx.fillRect(64, 72, 12, 12);
+  ctx.fillRect(104, 72, 12, 12);
 
   return canvas.toDataURL();
 }
