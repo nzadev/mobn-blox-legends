@@ -1,14 +1,32 @@
-# MOBN: Blox Legends 5v5 (MLBB x Roblox Edition)
+# MOBN: Blox Legends 5v5 (Godot 4.7 Engine Edition)
 
-Full 3D Isometric 5v5 MOBA game inspired by Mobile Legends: Bang Bang in Roblox R6 Anime Style — built with Three.js WebGL, Custom Vector SVG Artwork UI, and Dynamic WebAudio BGM + MLBB Voice Announcer.
+Full 3D Isometric 5v5 MOBA game inspired by Mobile Legends: Bang Bang in Roblox R6 Anime Style — now powered natively by **Godot Engine 4.7** (`GL Compatibility` / Forward+ ready) with 100+ generated game assets, modular GDScript 4.x static-typed architecture, procedural 3D R6 Hero Rigs, and real-time `AudioStreamGenerator` BGM + MLBB Voice Announcer.
 
-## Download & Play
-- **Android APK (Offline Ready, Landscape Fullscreen)**: [`MOBN-Blox-Legends-v1.0.0.apk`](./MOBN-Blox-Legends-v1.0.0.apk)
-- **Web / Desktop**: Open `index.html` or run `./start.sh` (`http://127.0.0.1:8095`).
+## How to Run (CachyOS Linux)
+- **Play Native Godot 4.7 Game**:
+  ```bash
+  /home/nza/.gemini/antigravity/scratch/mobn_blox_legends/start.sh
+  ```
+  *(or directly: `godot --path /home/nza/.gemini/antigravity/scratch/mobn_blox_legends`)*
+- **Open in Godot 4.7 Editor**:
+  ```bash
+  /home/nza/.gemini/antigravity/scratch/mobn_blox_legends/start.sh --editor
+  ```
+- **Run Automated Headless Verification**:
+  ```bash
+  /home/nza/.gemini/antigravity/scratch/mobn_blox_legends/start.sh --test
+  ```
 
-## Features
-- **3D Interactive Lobby & Classic 5v5 Queue Room**: Rotate 3D Roblox R6 hero models on the golden pedestal, inspect profile (`Warrior III`), currency, live invite banners, and queue into 5v5 Classic / Ranked / Practice modes.
-- **11 Playable Blox Legends Heroes**: *Laylul, Sabro, Yu Zong, Kajee, Yeen, Kimee, Minotor, Esteez, Master Yee, Ketootoo, Alucardox, Gusionox* — each with unique 3D weapons, skins (`DEFAULT`, `ELITE`, `EPIC`, `COLLECTOR`), and 4 custom SVG-illustrated skills.
-- **Draft Pick & Battle Setup**: 5-lane role claims (`Exp Lane`, `Mid Lane`, `Jungling`, `Gold Lane`, `Roaming`), 4 full equipment presets (*Crit Build, Attack Speed Build, Tank/Sustain Build, Recommended Pro*), and Battle Spells (*Flicker, Vengeance, Execute, Regen, Recall*).
-- **Full 3D MOBA Arena & MLBB Announcer Voice**: River pools, bush stealth, rock clusters, lane turrets, base nexus, jungle buff monsters, minion waves, auto-kiting target lock ring, dynamic soundtrack, and iconic voice callouts (*First Blood, Double Kill, Triple Kill, Maniac, Savage, Wipe Out, Victory*).
-
+## Architecture & Generated Assets (`res://assets/`)
+- **12 Playable Roblox R6 Heroes**: *Laylul, Sabro, Yu Zong, Kajee, Yeen, Kimee, Minotor, Esteez, Master Yee, Ketootoo, Alucardox, Gusionox* — each with custom skins (`DEFAULT`, `ELITE`, `EPIC`, `COLLECTOR`, `LEGEND`), 3D weapons, and 4 unique skills.
+- **Complete Required Asset Pack (`res://assets/`)**:
+  - `assets/icons/game_icon.png` & `assets/ui/lobby_splash_banner.png`: High-res AI-generated App Icon & Season 1 MOBA Lobby Splash Banner.
+  - `assets/portraits/*.png`: 12 Roblox R6 hero portrait cards.
+  - `assets/skills/*.png`: 48 custom skill & basic attack icons (4 per hero).
+  - `assets/items/*.png` & `assets/spells/*.png`: 11 MOBA equipment icons + 5 battle spell icons (*Flicker, Vengeance, Execute, Recall, Regen*).
+  - `assets/textures/faces/*.png`, `assets/textures/torsos/*.png`, `assets/textures/terrain/*.png`: 12 R6 anime face textures, 12 armor/corset torso textures, and 3 arena terrain textures (*grass, stone, brick*).
+- **Modular Godot 4.7 Scripts (`res://scripts/`)**:
+  - `scripts/autoload/game_database.gd` & `audio_synthesizer.gd`: Resource database and procedural BGM/SFX + TTS Voice Announcer (*First Blood, Double Kill, Triple Kill, Maniac, Savage, Wipe Out, Victory*).
+  - `scripts/components/health_component.gd` & `skill_component.gd`: Modular health, mana, damage mitigation, and cooldown components.
+  - `scripts/builders/roblox_hero_builder.gd` & `roblox_hero_rig.gd`: Procedural 3D R6 blocky mesh builder & limb/twintail animation controller.
+  - `scripts/arena/arena_battle_world.gd`: 3D Lobby pedestal + Full 5v5 MOBA Arena (river pools, stealth bushes, rock clusters, 8 turrets/nexuses, 4 jungle buff camps, minion waves, AI lane bots, projectiles, laser beams, and isometric camera shake).
