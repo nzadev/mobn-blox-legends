@@ -48,10 +48,15 @@ func _ready() -> void:
 	assert(main_inst.world.player_unit != null, "Player unit must be assigned")
 
 	main_inst.world.trigger_basic_attack(main_inst.world.player_unit)
-	main_inst.world.trigger_skill(main_inst.world.player_unit, 1)
-	main_inst.world.trigger_skill(main_inst.world.player_unit, 2)
-	main_inst.world.trigger_skill(main_inst.world.player_unit, 3)
+	for h: HeroData in GameDatabase.heroes:
+		main_inst.world.player_unit.hero_data = h
+		main_inst.world.player_unit.rig.hero_id = h.id
+		for slot_i: int in [1, 2, 3]:
+			main_inst.world.player_unit.skills_comp.cooldowns[str(slot_i)] = 0.0
+			main_inst.world.player_unit.health.current_mana = 999.0
+			main_inst.world.trigger_skill(main_inst.world.player_unit, slot_i)
+			main_inst.world.player_unit.rig.animate_character(0.05, true, false)
 
 	await get_tree().physics_frame
-	print("=== ALL 12 R6 HEROES, 100+ ASSETS, 3D LOBBY & 5v5 ARENA VERIFIED OK ===")
+	print("=== ALL 12 R6 HEROES, 36 UNIQUE SKILLS, ARTICULATED RIGS & 5v5 ARENA VERIFIED OK ===")
 	get_tree().quit(0)

@@ -77,12 +77,14 @@ static func build_hero_rig(hero: HeroData, skin_override: Dictionary = {}) -> Ro
 	var mat_pants := make_mat(hero.pants_color, 0.52, 0.05)
 	var mat_weapon := make_mat(hero.weapon_color, 0.2, 0.85, 0.45)
 
-	var left_leg_pivot := _build_leg(-0.28, mat_pants, mat_trim, mat_coat)
-	var right_leg_pivot := _build_leg(0.28, mat_pants, mat_trim, mat_coat)
-	rig.add_child(left_leg_pivot)
-	rig.add_child(right_leg_pivot)
-	rig.left_leg_pivot = left_leg_pivot
-	rig.right_leg_pivot = right_leg_pivot
+	var left_leg_data: Dictionary = _build_articulated_leg(-0.28, mat_pants, mat_trim, mat_coat)
+	var right_leg_data: Dictionary = _build_articulated_leg(0.28, mat_pants, mat_trim, mat_coat)
+	rig.add_child(left_leg_data["hip"])
+	rig.add_child(right_leg_data["hip"])
+	rig.left_leg_pivot = left_leg_data["hip"]
+	rig.right_leg_pivot = right_leg_data["hip"]
+	rig.left_knee_pivot = left_leg_data["knee"]
+	rig.right_knee_pivot = right_leg_data["knee"]
 
 	var torso_group := Node3D.new()
 	torso_group.position = Vector3(0.0, 1.56, 0.0)
@@ -113,26 +115,67 @@ static func build_hero_rig(hero: HeroData, skin_override: Dictionary = {}) -> Ro
 
 	if hero.id == "yuzong":
 		for dir: float in [-1.0, 1.0]:
+			var w_piv := Node3D.new()
+			w_piv.position = Vector3(dir * 0.25, 0.25, -0.32)
 			for i: int in range(3):
 				var fi: float = float(i)
-				torso_group.add_child(make_box(
+				w_piv.add_child(make_box(
 					Vector3(0.16, 1.15 - fi * 0.22, 0.14),
 					mat_trim,
-					Vector3(dir * (0.55 + fi * 0.32), 0.35 - fi * 0.15, -0.38 - fi * 0.05),
+					Vector3(dir * (0.3 + fi * 0.32), 0.1 - fi * 0.15, -0.06 - fi * 0.05),
 					Vector3(0.0, 0.0, dir * (-0.55 - fi * 0.25))
 				))
+			torso_group.add_child(w_piv)
+			if dir < 0.0:
+				rig.left_wing_pivot = w_piv
+			else:
+				rig.right_wing_pivot = w_piv
+		# Black Dragon Form Morph Overlay
+		var d_morph := Node3D.new()
+		d_morph.visible = false
+		d_morph.add_child(make_torus(1.45, 1.75, mat_aura, Vector3(0.0, 0.2, 0.0), Vector3(PI / 2.0, 0.0, 0.0)))
+		torso_group.add_child(d_morph)
+		rig.dragon_morph_node = d_morph
 	elif hero.id == "kimee":
 		for jx: float in [-0.28, 0.28]:
 			torso_group.add_child(make_cyl(0.18, 0.22, 0.88, mat_trim, Vector3(jx, 0.05, -0.45)))
 			torso_group.add_child(make_cone(0.16, 0.42, mat_aura, Vector3(jx, -0.55, -0.45), Vector3(PI, 0.0, 0.0)))
 	elif hero.id in ["esteez", "kajee"]:
-		torso_group.add_child(make_torus(0.88, 0.98, mat_aura, Vector3(0.0, 0.55, -0.42), Vector3(PI / 2.0, 0.0, 0.0)))
-		torso_group.add_child(make_box(Vector3(1.16, 1.45, 0.1), mat_coat, Vector3(0.0, -0.45, -0.32), Vector3(0.16, 0.0, 0.0)))
+		var halo := make_torus(0.88, 0.98, mat_aura, Vector3(0.0, 0.55, -0.42), Vector3(PI / 2.0, 0.0, 0.0))
+		torso_group.add_child(halo)
+		rig.halo_node = halo
+		var c_piv := Node3D.new()
+		c_piv.position = Vector3(0.0, 0.35, -0.28)
+		c_piv.add_child(make_box(Vector3(1.16, 1.45, 0.1), mat_coat, Vector3(0.0, -0.75, -0.04)))
+		torso_group.add_child(c_piv)
+		rig.cape_pivot = c_piv
 	elif hero.id in ["sabro", "masteryee", "gusionox"]:
 		for dir: float in [-1.0, 1.0]:
-			torso_group.add_child(make_box(Vector3(0.12, 1.1, 0.28), mat_aura, Vector3(dir * 0.48, 0.28, -0.42), Vector3(-0.25, 0.0, dir * -0.42)))
+			var w_piv := Node3D.new()
+			w_piv.position = Vector3(dir * 0.35, 0.28, -0.35)
+			w_piv.add_child(make_box(Vector3(0.12, 1.1, 0.28), mat_aura, Vector3(dir * 0.15, 0.0, -0.08), Vector3(-0.25, 0.0, dir * -0.42)))
+			torso_group.add_child(w_piv)
+			if dir < 0.0:
+				rig.left_wing_pivot = w_piv
+			else:
+				rig.right_wing_pivot = w_piv
 	else:
-		torso_group.add_child(make_box(Vector3(1.14, 1.38, 0.1), mat_coat, Vector3(0.0, -0.45, -0.32), Vector3(0.14, 0.0, 0.0)))
+		var c_piv := Node3D.new()
+		c_piv.position = Vector3(0.0, 0.35, -0.28)
+		c_piv.add_child(make_box(Vector3(1.14, 1.38, 0.1), mat_coat, Vector3(0.0, -0.72, -0.04)))
+		torso_group.add_child(c_piv)
+		rig.cape_pivot = c_piv
+
+	# 3D Orbiting Blades Ring for Sabro / Gusionox / Kajee
+	var orb_group := Node3D.new()
+	orb_group.position = Vector3(0.0, 1.35, 0.0)
+	orb_group.visible = false
+	for bi: int in range(5):
+		var ang: float = (float(bi) / 5.0) * TAU
+		var b_mesh := make_box(Vector3(0.14, 0.08, 1.25), mat_aura, Vector3(cos(ang) * 2.4, 0.0, sin(ang) * 2.4), Vector3(0.0, -ang, 0.0))
+		orb_group.add_child(b_mesh)
+	rig.add_child(orb_group)
+	rig.orbit_blades_group = orb_group
 
 	rig.add_child(torso_group)
 	rig.torso_group = torso_group
@@ -197,14 +240,16 @@ static func build_hero_rig(hero: HeroData, skin_override: Dictionary = {}) -> Ro
 	rig.add_child(head_group)
 	rig.head_group = head_group
 
-	var left_arm := _build_arm(-0.82, mat_coat, mat_trim, mat_skin)
-	var right_arm := _build_arm(0.82, mat_coat, mat_trim, mat_skin)
-	rig.add_child(left_arm)
-	rig.add_child(right_arm)
-	rig.left_arm_pivot = left_arm
-	rig.right_arm_pivot = right_arm
+	var left_arm_data: Dictionary = _build_articulated_arm(-0.82, mat_coat, mat_trim, mat_skin)
+	var right_arm_data: Dictionary = _build_articulated_arm(0.82, mat_coat, mat_trim, mat_skin)
+	rig.add_child(left_arm_data["shoulder"])
+	rig.add_child(right_arm_data["shoulder"])
+	rig.left_arm_pivot = left_arm_data["shoulder"]
+	rig.right_arm_pivot = right_arm_data["shoulder"]
+	rig.left_elbow_pivot = left_arm_data["elbow"]
+	rig.right_elbow_pivot = right_arm_data["elbow"]
 
-	_attach_unique_hero_weapon(hero.id, right_arm, left_arm, mat_weapon, mat_trim, mat_aura, mat_coat, rig)
+	_attach_unique_hero_weapon(hero.id, right_arm_data["elbow"], left_arm_data["elbow"], mat_weapon, mat_trim, mat_aura, mat_coat, rig)
 	return rig
 
 static func _attach_unique_hero_weapon(
@@ -218,9 +263,9 @@ static func _attach_unique_hero_weapon(
 	rig: RobloxHeroRig
 ) -> void:
 	var wg := Node3D.new()
-	wg.position = Vector3(0.0, -0.9, 0.38)
+	wg.position = Vector3(0.0, -0.45, 0.38)
 	var lwg := Node3D.new()
-	lwg.position = Vector3(0.0, -0.9, 0.38)
+	lwg.position = Vector3(0.0, -0.45, 0.38)
 
 	match hid:
 		"laylul":
@@ -409,19 +454,27 @@ static func build_minion_rig(team_str: String, role_idx: int) -> Node3D:
 
 	return g
 
-static func _build_leg(x_pos: float, mat_pants: Material, mat_trim: Material, mat_coat: Material) -> Node3D:
-	var pivot := Node3D.new()
-	pivot.position = Vector3(x_pos, 1.02, 0.0)
-	pivot.add_child(make_box(Vector3(0.45, 0.54, 0.46), mat_pants, Vector3(0.0, -0.26, 0.0)))
-	pivot.add_child(make_box(Vector3(0.49, 0.2, 0.52), mat_trim, Vector3(0.0, -0.52, 0.04)))
-	pivot.add_child(make_box(Vector3(0.5, 0.46, 0.52), mat_coat, Vector3(0.0, -0.78, 0.01)))
-	pivot.add_child(make_box(Vector3(0.54, 0.12, 0.6), mat_trim, Vector3(0.0, -0.97, 0.04)))
-	return pivot
+static func _build_articulated_leg(x_pos: float, mat_pants: Material, mat_trim: Material, mat_coat: Material) -> Dictionary:
+	var hip := Node3D.new()
+	hip.position = Vector3(x_pos, 1.02, 0.0)
+	hip.add_child(make_box(Vector3(0.45, 0.52, 0.46), mat_pants, Vector3(0.0, -0.25, 0.0)))
 
-static func _build_arm(x_offset: float, mat_coat: Material, mat_trim: Material, mat_skin: Material) -> Node3D:
-	var pivot := Node3D.new()
-	pivot.position = Vector3(x_offset, 2.02, 0.0)
-	pivot.add_child(make_box(Vector3(0.5, 0.52, 0.52), mat_coat, Vector3(0.0, -0.22, 0.0)))
-	pivot.add_child(make_box(Vector3(0.55, 0.36, 0.56), mat_trim, Vector3(0.0, -0.56, 0.0)))
-	pivot.add_child(make_box(Vector3(0.42, 0.38, 0.42), mat_skin, Vector3(0.0, -0.84, 0.0)))
-	return pivot
+	var knee := Node3D.new()
+	knee.position = Vector3(0.0, -0.50, 0.0)
+	knee.add_child(make_box(Vector3(0.49, 0.2, 0.52), mat_trim, Vector3(0.0, -0.02, 0.04)))
+	knee.add_child(make_box(Vector3(0.5, 0.46, 0.52), mat_coat, Vector3(0.0, -0.28, 0.01)))
+	knee.add_child(make_box(Vector3(0.54, 0.12, 0.6), mat_trim, Vector3(0.0, -0.47, 0.04)))
+	hip.add_child(knee)
+	return {"hip": hip, "knee": knee}
+
+static func _build_articulated_arm(x_offset: float, mat_coat: Material, mat_trim: Material, mat_skin: Material) -> Dictionary:
+	var shoulder := Node3D.new()
+	shoulder.position = Vector3(x_offset, 2.02, 0.0)
+	shoulder.add_child(make_box(Vector3(0.5, 0.48, 0.52), mat_coat, Vector3(0.0, -0.22, 0.0)))
+
+	var elbow := Node3D.new()
+	elbow.position = Vector3(0.0, -0.44, 0.0)
+	elbow.add_child(make_box(Vector3(0.55, 0.34, 0.56), mat_trim, Vector3(0.0, -0.14, 0.0)))
+	elbow.add_child(make_box(Vector3(0.42, 0.34, 0.42), mat_skin, Vector3(0.0, -0.40, 0.0)))
+	shoulder.add_child(elbow)
+	return {"shoulder": shoulder, "elbow": elbow}

@@ -664,7 +664,7 @@ func trigger_skill(u: CombatUnit, slot_idx: int) -> void:
 		u.rotation.y = aim_angle
 
 	if u.rig != null:
-		u.rig.animate_character(0.016, false, true)
+		u.rig.trigger_skill_pose(slot_idx, 0.55)
 
 	var total_dmg: float = sk.base_damage + u.atk * sk.atk_ratio
 	if u.is_player:
@@ -674,99 +674,9 @@ func trigger_skill(u: CombatUnit, slot_idx: int) -> void:
 			AudioSynthesizer.skill2()
 		else:
 			AudioSynthesizer.ultimate()
-			trigger_screen_shake(0.45, 0.35)
+			trigger_screen_shake(0.48, 0.38)
 
-	match sk.skill_type:
-		"mega_laser":
-			var length: float = sk.cast_range
-			_spawn_laser_beam(u.position.x, u.position.z, aim_angle, length, sk.color_hex, 0.45)
-			var enemies: Array[Dictionary] = get_valid_targets(u, length + 1.5)
-			for item: Dictionary in enemies:
-				var t: CombatUnit = item["target"]
-				var to_x: float = t.position.x - u.position.x
-				var to_z: float = t.position.z - u.position.z
-				var forward: float = to_x * sin(aim_angle) + to_z * cos(aim_angle)
-				var perp: float = absf(to_x * cos(aim_angle) - to_z * sin(aim_angle))
-				if forward > -0.5 and forward <= length + 1.0 and perp <= 2.45:
-					apply_damage(u, t, total_dmg, true)
-		"stun_orb":
-			_spawn_projectile({
-				"owner": u,
-				"x": u.position.x + sin(aim_angle) * 0.9,
-				"z": u.position.z + cos(aim_angle) * 0.9,
-				"vx": sin(aim_angle) * 21.0,
-				"vz": cos(aim_angle) * 21.0,
-				"color": sk.color_hex,
-				"radius": 0.56,
-				"max_dist": sk.cast_range,
-				"dmg": total_dmg,
-				"stun": 1.4,
-				"aoe_radius": 2.8
-			})
-		"line_bolt":
-			u.speed_buff_timer = 3.2
-			_spawn_projectile({
-				"owner": u,
-				"x": u.position.x + sin(aim_angle) * 0.9,
-				"z": u.position.z + cos(aim_angle) * 0.9,
-				"vx": sin(aim_angle) * 27.0,
-				"vz": cos(aim_angle) * 27.0,
-				"color": sk.color_hex,
-				"radius": 0.46,
-				"max_dist": sk.cast_range,
-				"dmg": total_dmg,
-				"stun": 0.0,
-				"aoe_radius": 1.9
-			})
-		"dash_slash":
-			var dash_dist: float = 5.5
-			var sx: float = u.position.x
-			var sz: float = u.position.z
-			u.position.x = _clamp_map(u.position.x + sin(aim_angle) * dash_dist)
-			u.position.z = _clamp_map(u.position.z + cos(aim_angle) * dash_dist)
-			_spawn_laser_beam(sx, sz, aim_angle, dash_dist, sk.color_hex, 0.25)
-			for item: Dictionary in get_valid_targets(u, 4.2):
-				apply_damage(u, item["target"] as CombatUnit, total_dmg, true)
-		"orbit_blades":
-			u.orbit_timer = 4.5
-			_spawn_ring_explosion(u.position.x, u.position.z, 4.5, sk.color_hex)
-			for item: Dictionary in get_valid_targets(u, 5.2):
-				apply_damage(u, item["target"] as CombatUnit, total_dmg, true)
-		"triple_sweep", "domain_barrage", "divine_chain":
-			if primary != null:
-				u.position.x = _clamp_map(primary.position.x - sin(aim_angle) * 1.4)
-				u.position.z = _clamp_map(primary.position.z - cos(aim_angle) * 1.4)
-				primary.stun_timer = maxf(primary.stun_timer, 1.4)
-				_spawn_ring_explosion(primary.position.x, primary.position.z, 4.2, sk.color_hex)
-				apply_damage(u, primary, total_dmg, true)
-				floating_text_spawned.emit(primary.position + Vector3(0.0, 2.8, 0.0), "STUNNED!", "#fde047")
-			else:
-				_spawn_ring_explosion(u.position.x, u.position.z, 5.0, sk.color_hex)
-		"aoe_spin", "ring_pulse", "minoan_quake", "dragon_form":
-			var rad: float = sk.cast_range
-			_spawn_ring_explosion(u.position.x, u.position.z, rad, sk.color_hex)
-			for item: Dictionary in get_valid_targets(u, rad):
-				var t: CombatUnit = item["target"]
-				apply_damage(u, t, total_dmg, true)
-				if sk.skill_type == "minoan_quake":
-					t.stun_timer = 1.4
-					floating_text_spawned.emit(t.position + Vector3(0.0, 2.8, 0.0), "AIRBORNE!", "#fb923c")
-			heal_unit(u, roundi(total_dmg * 0.35))
-		"leap_slam":
-			var jump_dist: float = minf(sk.cast_range, Vector2(primary.position.x - u.position.x, primary.position.z - u.position.z).length() if primary else 5.0)
-			u.position.x = _clamp_map(u.position.x + sin(aim_angle) * jump_dist)
-			u.position.z = _clamp_map(u.position.z + cos(aim_angle) * jump_dist)
-			_spawn_ring_explosion(u.position.x, u.position.z, 4.5, sk.color_hex)
-			for item: Dictionary in get_valid_targets(u, 4.5):
-				var t: CombatUnit = item["target"]
-				t.stun_timer = 1.0
-				apply_damage(u, t, total_dmg, true)
-				floating_text_spawned.emit(t.position + Vector3(0.0, 2.8, 0.0), "STUNNED!", "#fde047")
-		"team_heal":
-			_spawn_ring_explosion(u.position.x, u.position.z, 6.5, "#4ade80")
-			for ally: CombatUnit in hero_units:
-				if not ally.is_dead() and ally.team == u.team and ally.position.distance_to(u.position) <= 8.5:
-					heal_unit(ally, roundi(total_dmg))
+	_execute_unique_hero_skill(u, slot_idx, sk, aim_angle, primary, total_dmg)
 
 func trigger_battle_action(u: CombatUnit, action_type: String) -> void:
 	if u == null or u.is_dead():
@@ -966,6 +876,355 @@ func _spawn_laser_beam(x: float, z: float, angle: float, length: float, col_hex:
 	arena_root.add_child(g)
 	vfx_list.append({"node": g, "timer": duration, "max_timer": duration, "type": "laser"})
 
+func _execute_unique_hero_skill(u: CombatUnit, slot_idx: int, sk: SkillData, aim_angle: float, primary: CombatUnit, total_dmg: float) -> void:
+	var hid: String = u.hero_data.id if u.hero_data else "laylul"
+	var key: String = "%s_%d" % [hid, slot_idx]
+	floating_text_spawned.emit(u.position + Vector3(0.0, 3.2, 0.0), sk.name.to_upper() + "!", sk.color_hex)
+
+	match key:
+		# 1. LAYLUL (Void Marksman)
+		"laylul_1":
+			u.speed_buff_timer = 3.5
+			_spawn_projectile({
+				"owner": u, "x": u.position.x + sin(aim_angle) * 0.9, "z": u.position.z + cos(aim_angle) * 0.9,
+				"vx": sin(aim_angle) * 29.0, "vz": cos(aim_angle) * 29.0,
+				"color": "#facc15", "radius": 0.48, "max_dist": 12.0, "dmg": total_dmg, "stun": 0.0, "aoe_radius": 2.1
+			})
+		"laylul_2":
+			_spawn_projectile({
+				"owner": u, "x": u.position.x + sin(aim_angle) * 0.9, "z": u.position.z + cos(aim_angle) * 0.9,
+				"vx": sin(aim_angle) * 21.0, "vz": cos(aim_angle) * 21.0,
+				"color": "#a855f7", "radius": 0.65, "max_dist": 10.0, "dmg": total_dmg, "stun": 1.3, "aoe_radius": 3.4
+			})
+		"laylul_3":
+			var length: float = 19.0
+			_spawn_laser_beam(u.position.x, u.position.z, aim_angle, length, "#22d3ee", 0.55)
+			for item: Dictionary in get_valid_targets(u, length + 1.5):
+				var t: CombatUnit = item["target"]
+				var to_x: float = t.position.x - u.position.x
+				var to_z: float = t.position.z - u.position.z
+				var forward: float = to_x * sin(aim_angle) + to_z * cos(aim_angle)
+				var perp: float = absf(to_x * cos(aim_angle) - to_z * sin(aim_angle))
+				if forward > -0.5 and forward <= length + 1.0 and perp <= 2.6:
+					apply_damage(u, t, total_dmg, true)
+
+		# 2. SABRO (Wandering Sword)
+		"sabro_1":
+			u.orbit_timer = 5.0
+			_spawn_ring_explosion(u.position.x, u.position.z, 5.2, "#38bdf8")
+			for item: Dictionary in get_valid_targets(u, 5.5):
+				apply_damage(u, item["target"] as CombatUnit, total_dmg, true)
+		"sabro_2":
+			var sx: float = u.position.x
+			var sz: float = u.position.z
+			u.position.x = _clamp_map(sx + sin(aim_angle) * 6.0)
+			u.position.z = _clamp_map(sz + cos(aim_angle) * 6.0)
+			_spawn_laser_beam(sx, sz, aim_angle, 6.0, "#60a5fa", 0.28)
+			for item: Dictionary in get_valid_targets(u, 3.8):
+				apply_damage(u, item["target"] as CombatUnit, total_dmg, true)
+		"sabro_3":
+			if primary != null:
+				u.position.x = _clamp_map(primary.position.x - sin(aim_angle) * 1.2)
+				u.position.z = _clamp_map(primary.position.z - cos(aim_angle) * 1.2)
+				primary.stun_timer = 1.6
+				_spawn_pillar_vfx(primary.position.x, primary.position.z, 1.8, 5.5, "#ef4444", 0.55)
+				_spawn_ring_explosion(primary.position.x, primary.position.z, 4.2, "#ef4444")
+				apply_damage(u, primary, total_dmg, true)
+				floating_text_spawned.emit(primary.position + Vector3(0.0, 3.2, 0.0), "AIRBORNE x3!", "#ef4444")
+			else:
+				_spawn_ring_explosion(u.position.x, u.position.z, 5.0, "#ef4444")
+
+		# 3. YU ZONG (Black Dragon)
+		"yuzong_1":
+			_spawn_ring_explosion(u.position.x, u.position.z, 5.6, "#e11d48")
+			_spawn_ring_explosion(u.position.x, u.position.z, 3.2, "#fb7185")
+			for item: Dictionary in get_valid_targets(u, 5.6):
+				apply_damage(u, item["target"] as CombatUnit, total_dmg, true)
+			heal_unit(u, roundi(total_dmg * 0.42))
+		"yuzong_2":
+			var jd: float = minf(7.0, u.position.distance_to(primary.position) if primary else 5.5)
+			u.position.x = _clamp_map(u.position.x + sin(aim_angle) * jd)
+			u.position.z = _clamp_map(u.position.z + cos(aim_angle) * jd)
+			_spawn_pillar_vfx(u.position.x, u.position.z, 2.4, 3.5, "#be123c", 0.42)
+			for item: Dictionary in get_valid_targets(u, 4.5):
+				var t: CombatUnit = item["target"]
+				t.stun_timer = 1.1
+				apply_damage(u, t, total_dmg, true)
+		"yuzong_3":
+			u.speed_buff_timer = 6.0
+			heal_unit(u, 550)
+			_spawn_pillar_vfx(u.position.x, u.position.z, 3.5, 6.0, "#f43f5e", 0.65)
+			_spawn_ring_explosion(u.position.x, u.position.z, 7.5, "#e11d48")
+			for item: Dictionary in get_valid_targets(u, 7.5):
+				apply_damage(u, item["target"] as CombatUnit, total_dmg, true)
+
+		# 4. KAJEE (Nazar King)
+		"kajee_1":
+			_spawn_ring_explosion(u.position.x, u.position.z, 6.8, "#facc15")
+			_spawn_ring_explosion(u.position.x, u.position.z, 4.2, "#fde047")
+			for item: Dictionary in get_valid_targets(u, 6.8):
+				apply_damage(u, item["target"] as CombatUnit, total_dmg, true)
+			heal_unit(u, 260)
+		"kajee_2":
+			var sx: float = u.position.x
+			var sz: float = u.position.z
+			for bi: int in range(1, 4):
+				var bx: float = sx + sin(aim_angle) * float(bi) * 1.8
+				var bz: float = sz + cos(aim_angle) * float(bi) * 1.8
+				_spawn_pillar_vfx(bx, bz, 0.95, 2.4, "#fde047", 0.5)
+			u.position.x = _clamp_map(sx + sin(aim_angle) * 5.8)
+			u.position.z = _clamp_map(sz + cos(aim_angle) * 5.8)
+			for item: Dictionary in get_valid_targets(u, 4.8):
+				apply_damage(u, item["target"] as CombatUnit, total_dmg, true)
+		"kajee_3":
+			if primary != null:
+				var dist_t: float = u.position.distance_to(primary.position)
+				var ang_t: float = atan2(primary.position.x - u.position.x, primary.position.z - u.position.z)
+				_spawn_laser_beam(u.position.x, u.position.z, ang_t, dist_t, "#eab308", 0.6)
+				primary.position.x = _clamp_map(lerpf(primary.position.x, u.position.x, 0.55))
+				primary.position.z = _clamp_map(lerpf(primary.position.z, u.position.z, 0.55))
+				primary.stun_timer = 1.7
+				apply_damage(u, primary, total_dmg, true)
+				floating_text_spawned.emit(primary.position + Vector3(0.0, 3.0, 0.0), "SUPPRESSED!", "#facc15")
+			else:
+				_spawn_ring_explosion(u.position.x, u.position.z, 5.5, "#eab308")
+
+		# 5. YEEN (Martial Genius)
+		"yeen_1":
+			u.speed_buff_timer = 2.8
+			u.position.x = _clamp_map(u.position.x + sin(aim_angle) * 3.8)
+			u.position.z = _clamp_map(u.position.z + cos(aim_angle) * 3.8)
+			_spawn_ring_explosion(u.position.x, u.position.z, 3.8, "#f97316")
+			for item: Dictionary in get_valid_targets(u, 4.2):
+				apply_damage(u, item["target"] as CombatUnit, total_dmg, true)
+		"yeen_2":
+			var sx: float = u.position.x
+			var sz: float = u.position.z
+			u.position.x = _clamp_map(sx + sin(aim_angle) * 5.5)
+			u.position.z = _clamp_map(sz + cos(aim_angle) * 5.5)
+			_spawn_ring_explosion(sx, sz, 2.8, "#fbbf24")
+			_spawn_ring_explosion(u.position.x, u.position.z, 3.6, "#fbbf24")
+			for item: Dictionary in get_valid_targets(u, 4.2):
+				var t: CombatUnit = item["target"]
+				t.stun_timer = 1.1
+				apply_damage(u, t, total_dmg, true)
+		"yeen_3":
+			var center_p: Vector3 = primary.position if primary != null else u.position
+			_spawn_pillar_vfx(center_p.x, center_p.z, 6.2, 2.8, "#dc2626", 1.1)
+			_spawn_ring_explosion(center_p.x, center_p.z, 6.5, "#f97316")
+			for item: Dictionary in get_valid_targets(u, 6.8):
+				var t: CombatUnit = item["target"]
+				t.stun_timer = 1.4
+				apply_damage(u, t, total_dmg, true)
+
+		# 6. KIMEE (Jetpack Alchemist)
+		"kimee_1":
+			for ang_off: float in [-0.20, 0.0, 0.20]:
+				var a: float = aim_angle + ang_off
+				_spawn_projectile({
+					"owner": u, "x": u.position.x + sin(a) * 0.9, "z": u.position.z + cos(a) * 0.9,
+					"vx": sin(a) * 25.0, "vz": cos(a) * 25.0,
+					"color": "#ec4899", "radius": 0.38, "max_dist": 10.5, "dmg": total_dmg * 0.45, "stun": 0.0, "aoe_radius": 1.6
+				})
+		"kimee_2":
+			var sx: float = u.position.x
+			var sz: float = u.position.z
+			_spawn_pillar_vfx(sx, sz, 3.2, 0.4, "#4ade80", 0.9)
+			u.position.x = _clamp_map(sx - sin(aim_angle) * 5.2)
+			u.position.z = _clamp_map(sz - cos(aim_angle) * 5.2)
+			for item: Dictionary in get_valid_targets(u, 6.0):
+				apply_damage(u, item["target"] as CombatUnit, total_dmg, true)
+		"kimee_3":
+			_spawn_projectile({
+				"owner": u, "x": u.position.x + sin(aim_angle) * 1.1, "z": u.position.z + cos(aim_angle) * 1.1,
+				"vx": sin(aim_angle) * 24.0, "vz": cos(aim_angle) * 24.0,
+				"color": "#f43f5e", "radius": 0.85, "max_dist": 16.0, "dmg": total_dmg, "stun": 0.8, "aoe_radius": 4.8
+			})
+
+		# 7. MINOTOR (Son of Minos)
+		"minotor_1":
+			var jd: float = minf(6.5, u.position.distance_to(primary.position) if primary else 5.0)
+			u.position.x = _clamp_map(u.position.x + sin(aim_angle) * jd)
+			u.position.z = _clamp_map(u.position.z + cos(aim_angle) * jd)
+			_spawn_ring_explosion(u.position.x, u.position.z, 4.8, "#f97316")
+			for item: Dictionary in get_valid_targets(u, 4.8):
+				var t: CombatUnit = item["target"]
+				t.stun_timer = 0.9
+				apply_damage(u, t, total_dmg, true)
+		"minotor_2":
+			_spawn_pillar_vfx(u.position.x, u.position.z, 4.5, 2.5, "#4ade80", 0.55)
+			for ally: CombatUnit in hero_units:
+				if not ally.is_dead() and ally.team == u.team and ally.position.distance_to(u.position) <= 7.5:
+					heal_unit(ally, roundi(total_dmg))
+		"minotor_3":
+			trigger_screen_shake(0.65, 0.5)
+			for r_rad: float in [3.2, 5.4, 7.6]:
+				_spawn_ring_explosion(u.position.x, u.position.z, r_rad, "#ea580c")
+			_spawn_pillar_vfx(u.position.x, u.position.z, 3.8, 4.0, "#f97316", 0.6)
+			for item: Dictionary in get_valid_targets(u, 7.6):
+				var t: CombatUnit = item["target"]
+				t.stun_timer = 1.6
+				apply_damage(u, t, total_dmg, true)
+				floating_text_spawned.emit(t.position + Vector3(0.0, 3.0, 0.0), "MEGA QUAKE!", "#fb923c")
+
+		# 8. ESTEEZ (Moonlight King)
+		"esteez_1":
+			var lowest_ally: CombatUnit = u
+			for ally: CombatUnit in hero_units:
+				if not ally.is_dead() and ally.team == u.team and ally.position.distance_to(u.position) <= 9.0:
+					if ally.health.current_hp < lowest_ally.health.current_hp:
+						lowest_ally = ally
+			heal_unit(u, roundi(total_dmg * 0.7))
+			heal_unit(lowest_ally, roundi(total_dmg))
+			if lowest_ally != u:
+				var ang_a: float = atan2(lowest_ally.position.x - u.position.x, lowest_ally.position.z - u.position.z)
+				_spawn_laser_beam(u.position.x, u.position.z, ang_a, u.position.distance_to(lowest_ally.position), "#4ade80", 0.55)
+		"esteez_2":
+			var tp: Vector3 = primary.position if primary != null else (u.position + Vector3(sin(aim_angle) * 6.0, 0.0, cos(aim_angle) * 6.0))
+			_spawn_pillar_vfx(tp.x, tp.z, 3.8, 3.0, "#38bdf8", 0.65)
+			_spawn_ring_explosion(tp.x, tp.z, 4.2, "#38bdf8")
+			for item: Dictionary in get_valid_targets(u, 11.0):
+				var t: CombatUnit = item["target"]
+				if t.position.distance_to(tp) <= 4.2:
+					t.stun_timer = 0.8
+					apply_damage(u, t, total_dmg, true)
+		"esteez_3":
+			_spawn_pillar_vfx(u.position.x, u.position.z, 7.5, 3.5, "#22c55e", 0.85)
+			for ally: CombatUnit in hero_units:
+				if not ally.is_dead() and ally.team == u.team and ally.position.distance_to(u.position) <= 9.5:
+					heal_unit(ally, roundi(total_dmg * 1.15))
+					_spawn_ring_explosion(ally.position.x, ally.position.z, 2.5, "#4ade80")
+
+		# 9. MASTER YEE (Wuju Blademaster)
+		"masteryee_1":
+			var targets: Array[Dictionary] = get_valid_targets(u, 7.5)
+			var limit: int = mini(4, targets.size())
+			for idx: int in range(limit):
+				var t: CombatUnit = targets[idx]["target"]
+				var ang_t: float = atan2(t.position.x - u.position.x, t.position.z - u.position.z)
+				_spawn_laser_beam(u.position.x, u.position.z, ang_t, u.position.distance_to(t.position), "#84cc16", 0.25)
+				apply_damage(u, t, total_dmg, true)
+			if limit > 0:
+				var last_t: CombatUnit = targets[limit - 1]["target"]
+				u.position.x = _clamp_map(last_t.position.x - sin(aim_angle) * 1.2)
+				u.position.z = _clamp_map(last_t.position.z - cos(aim_angle) * 1.2)
+		"masteryee_2":
+			u.regen_timer = 3.0
+			heal_unit(u, roundi(total_dmg))
+			_spawn_pillar_vfx(u.position.x, u.position.z, 2.2, 4.2, "#a3e635", 0.65)
+		"masteryee_3":
+			u.speed_buff_timer = 6.0
+			var sx: float = u.position.x
+			var sz: float = u.position.z
+			u.position.x = _clamp_map(sx + sin(aim_angle) * 6.5)
+			u.position.z = _clamp_map(sz + cos(aim_angle) * 6.5)
+			_spawn_laser_beam(sx, sz, aim_angle, 6.5, "#65a30d", 0.35)
+			for item: Dictionary in get_valid_targets(u, 5.5):
+				apply_damage(u, item["target"] as CombatUnit, total_dmg, true)
+
+		# 10. KETOOTOO (Arcane Trickster)
+		"ketootoo_1":
+			for side: float in [-0.35, 0.35]:
+				var ox: float = u.position.x + cos(aim_angle) * side
+				var oz: float = u.position.z - sin(aim_angle) * side
+				_spawn_projectile({
+					"owner": u, "x": ox, "z": oz,
+					"vx": sin(aim_angle) * 30.0, "vz": cos(aim_angle) * 30.0,
+					"color": "#38bdf8", "radius": 0.35, "max_dist": 11.5, "dmg": total_dmg * 0.65, "stun": 0.0, "aoe_radius": 1.4
+				})
+		"ketootoo_2":
+			u.position.x = _clamp_map(u.position.x + cos(aim_angle) * 4.2)
+			u.position.z = _clamp_map(u.position.z - sin(aim_angle) * 4.2)
+			_spawn_projectile({
+				"owner": u, "x": u.position.x, "z": u.position.z,
+				"vx": sin(aim_angle) * 24.0, "vz": cos(aim_angle) * 24.0,
+				"color": "#60a5fa", "radius": 0.52, "max_dist": 9.0, "dmg": total_dmg, "stun": 1.0, "aoe_radius": 2.2
+			})
+		"ketootoo_3":
+			for ang_off: float in [-0.36, -0.18, 0.0, 0.18, 0.36]:
+				var a: float = aim_angle + ang_off
+				_spawn_projectile({
+					"owner": u, "x": u.position.x + sin(a) * 0.9, "z": u.position.z + cos(a) * 0.9,
+					"vx": sin(a) * 26.0, "vz": cos(a) * 26.0,
+					"color": "#3b82f6", "radius": 0.42, "max_dist": 14.0, "dmg": total_dmg * 0.38, "stun": 0.0, "aoe_radius": 1.8
+				})
+
+		# 11. ALUCARDOX (Demon Hunter)
+		"alucardox_1":
+			var jd: float = minf(7.0, u.position.distance_to(primary.position) if primary else 5.5)
+			u.position.x = _clamp_map(u.position.x + sin(aim_angle) * jd)
+			u.position.z = _clamp_map(u.position.z + cos(aim_angle) * jd)
+			_spawn_pillar_vfx(u.position.x, u.position.z, 3.2, 1.5, "#3b82f6", 0.45)
+			for item: Dictionary in get_valid_targets(u, 4.5):
+				apply_damage(u, item["target"] as CombatUnit, total_dmg, true)
+		"alucardox_2":
+			_spawn_ring_explosion(u.position.x, u.position.z, 5.2, "#60a5fa")
+			for item: Dictionary in get_valid_targets(u, 5.2):
+				apply_damage(u, item["target"] as CombatUnit, total_dmg, true)
+			heal_unit(u, roundi(total_dmg * 0.45))
+		"alucardox_3":
+			heal_unit(u, 380)
+			_spawn_laser_beam(u.position.x, u.position.z, aim_angle, 13.0, "#2563eb", 0.45)
+			for item: Dictionary in get_valid_targets(u, 13.0):
+				var t: CombatUnit = item["target"]
+				var to_x: float = t.position.x - u.position.x
+				var to_z: float = t.position.z - u.position.z
+				var forward: float = to_x * sin(aim_angle) + to_z * cos(aim_angle)
+				var perp: float = absf(to_x * cos(aim_angle) - to_z * sin(aim_angle))
+				if forward > -0.5 and forward <= 13.5 and perp <= 2.8:
+					apply_damage(u, t, total_dmg, true)
+
+		# 12. GUSIONOX (Holy Blade)
+		"gusionox_1":
+			if primary != null:
+				var sx: float = u.position.x
+				var sz: float = u.position.z
+				u.position.x = _clamp_map(primary.position.x + sin(aim_angle) * 1.4)
+				u.position.z = _clamp_map(primary.position.z + cos(aim_angle) * 1.4)
+				_spawn_laser_beam(sx, sz, aim_angle, Vector2(primary.position.x - sx, primary.position.z - sz).length(), "#22d3ee", 0.3)
+				apply_damage(u, primary, total_dmg, true)
+			else:
+				_spawn_projectile({
+					"owner": u, "x": u.position.x, "z": u.position.z,
+					"vx": sin(aim_angle) * 28.0, "vz": cos(aim_angle) * 28.0,
+					"color": "#22d3ee", "radius": 0.36, "max_dist": 8.5, "dmg": total_dmg, "stun": 0.0, "aoe_radius": 1.2
+				})
+		"gusionox_2":
+			for ang_off: float in [-0.40, -0.20, 0.0, 0.20, 0.40]:
+				var a: float = aim_angle + ang_off
+				_spawn_projectile({
+					"owner": u, "x": u.position.x + sin(a) * 0.8, "z": u.position.z + cos(a) * 0.8,
+					"vx": sin(a) * 23.0, "vz": cos(a) * 23.0,
+					"color": "#38bdf8", "radius": 0.32, "max_dist": 7.5, "dmg": total_dmg * 0.35, "stun": 0.0, "aoe_radius": 1.2
+				})
+		"gusionox_3":
+			u.skills_comp.cooldowns["1"] = 0.0
+			u.skills_comp.cooldowns["2"] = 0.0
+			u.position.x = _clamp_map(u.position.x + sin(aim_angle) * 4.5)
+			u.position.z = _clamp_map(u.position.z + cos(aim_angle) * 4.5)
+			for i: int in range(8):
+				var a: float = (float(i) / 8.0) * TAU
+				_spawn_projectile({
+					"owner": u, "x": u.position.x + sin(a) * 0.6, "z": u.position.z + cos(a) * 0.6,
+					"vx": sin(a) * 22.0, "vz": cos(a) * 22.0,
+					"color": "#06b6d4", "radius": 0.32, "max_dist": 7.0, "dmg": total_dmg * 0.35, "stun": 0.0, "aoe_radius": 1.2
+				})
+
+func _spawn_pillar_vfx(x: float, z: float, radius: float, height: float, col_hex: String, duration: float = 0.5) -> void:
+	var mi := MeshInstance3D.new()
+	var cm := CylinderMesh.new()
+	cm.top_radius = radius
+	cm.bottom_radius = radius
+	cm.height = height
+	mi.mesh = cm
+	var mat := RobloxHeroBuilder.make_mat(col_hex, 0.2, 0.2, 1.1)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color.a = 0.55
+	mi.material_override = mat
+	mi.position = Vector3(x, height * 0.5, z)
+	arena_root.add_child(mi)
+	vfx_list.append({"node": mi, "timer": duration, "max_timer": duration, "type": "pillar"})
+
 func _spawn_ring_explosion(x: float, z: float, max_r: float, col_hex: String) -> void:
 	var mi := MeshInstance3D.new()
 	var tm := TorusMesh.new()
@@ -1056,6 +1315,9 @@ func _update_battle(dt: float) -> void:
 		if u.aura_ring_mesh != null:
 			u.aura_ring_mesh.visible = (u.orbit_timer > 0.0)
 			u.aura_ring_mesh.rotation.y += dt * 4.5
+		if u.rig != null:
+			u.rig.set_orbit_swords_active(u.orbit_timer > 0.0, dt)
+			u.rig.set_dragon_form_active(u.hero_data != null and u.hero_data.id == "yuzong" and u.speed_buff_timer > 1.5)
 
 		if u.orbit_timer > 0.0:
 			u.orbit_timer -= dt

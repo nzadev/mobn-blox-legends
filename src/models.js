@@ -320,37 +320,40 @@ function buildRobloxHeroMesh(hero, skinOverride = null) {
     matCoat
   ];
 
-  // Sculpted Armored Legs with Knee Guards & Heavy Greaves
+  // Sculpted Articulated Legs with Hip + Knee Joints & Heavy Greaves
   const buildLeg = (xPos) => {
-    const legPivot = new THREE.Group();
-    legPivot.position.set(xPos, 1.02, 0);
+    const hipPivot = new THREE.Group();
+    hipPivot.position.set(xPos, 1.02, 0);
 
-    const thigh = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.54, 0.46), matPants);
-    thigh.position.y = -0.26;
+    const thigh = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.52, 0.46), matPants);
+    thigh.position.y = -0.25;
     thigh.castShadow = true;
-    legPivot.add(thigh);
+    hipPivot.add(thigh);
 
-    // Metallic Knee Guard
-    const knee = new THREE.Mesh(new THREE.BoxGeometry(0.49, 0.2, 0.52), matTrim);
-    knee.position.set(0, -0.52, 0.04);
-    legPivot.add(knee);
+    const kneePivot = new THREE.Group();
+    kneePivot.position.set(0, -0.50, 0);
 
-    // Armored Shin Greave
+    const kneeGuard = new THREE.Mesh(new THREE.BoxGeometry(0.49, 0.2, 0.52), matTrim);
+    kneeGuard.position.set(0, -0.02, 0.04);
+    kneePivot.add(kneeGuard);
+
     const shin = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.46, 0.52), matCoat);
-    shin.position.set(0, -0.78, 0.01);
+    shin.position.set(0, -0.28, 0.01);
     shin.castShadow = true;
-    legPivot.add(shin);
+    kneePivot.add(shin);
 
-    // Boot & Glowing Sole Trim
     const sole = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.12, 0.6), matTrim);
-    sole.position.set(0, -0.97, 0.04);
-    legPivot.add(sole);
+    sole.position.set(0, -0.47, 0.04);
+    kneePivot.add(sole);
 
-    return legPivot;
+    hipPivot.add(kneePivot);
+    return { hip: hipPivot, knee: kneePivot };
   };
 
-  const leftLegPivot = buildLeg(-0.28);
-  const rightLegPivot = buildLeg(0.28);
+  const leftLegData = buildLeg(-0.28);
+  const rightLegData = buildLeg(0.28);
+  const leftLegPivot = leftLegData.hip;
+  const rightLegPivot = rightLegData.hip;
   root.add(leftLegPivot, rightLegPivot);
 
   // Sculpted Armored Torso + 3D Chest Core + Pauldrons + Waist Tassets + Hero Back Attachments
@@ -554,37 +557,43 @@ function buildRobloxHeroMesh(hero, skinOverride = null) {
 
   root.add(headGroup);
 
-  // Armored Arms with Vambrace Gauntlets
+  // Articulated Arms with Shoulder + Elbow Joints & Vambrace Gauntlets
   const buildArm = (xOffset) => {
-    const pivot = new THREE.Group();
-    pivot.position.set(xOffset, 2.02, 0);
+    const shoulder = new THREE.Group();
+    shoulder.position.set(xOffset, 2.02, 0);
 
-    const sleeve = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.52, 0.52), matCoat);
+    const sleeve = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.48, 0.52), matCoat);
     sleeve.position.y = -0.22;
     sleeve.castShadow = true;
-    pivot.add(sleeve);
+    shoulder.add(sleeve);
 
-    const vambrace = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.36, 0.56), matTrim);
-    vambrace.position.y = -0.56;
-    pivot.add(vambrace);
+    const elbow = new THREE.Group();
+    elbow.position.set(0, -0.44, 0);
 
-    const hand = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.38, 0.42), matSkin);
-    hand.position.y = -0.84;
+    const vambrace = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.34, 0.56), matTrim);
+    vambrace.position.y = -0.14;
+    elbow.add(vambrace);
+
+    const hand = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.34, 0.42), matSkin);
+    hand.position.y = -0.40;
     hand.castShadow = true;
-    pivot.add(hand);
+    elbow.add(hand);
 
-    return pivot;
+    shoulder.add(elbow);
+    return { shoulder, elbow };
   };
 
-  const leftArmPivot = buildArm(-0.82);
-  const rightArmPivot = buildArm(0.82);
+  const leftArmData = buildArm(-0.82);
+  const rightArmData = buildArm(0.82);
+  const leftArmPivot = leftArmData.shoulder;
+  const rightArmPivot = rightArmData.shoulder;
   root.add(leftArmPivot, rightArmPivot);
 
   // High-Detail Signature 3D Weapons (12 Unique Hero Weapons!)
   const weaponGroup = new THREE.Group();
-  weaponGroup.position.set(0, -0.9, 0.38);
+  weaponGroup.position.set(0, -0.45, 0.38);
   const leftWeaponGroup = new THREE.Group();
-  leftWeaponGroup.position.set(0, -0.9, 0.38);
+  leftWeaponGroup.position.set(0, -0.45, 0.38);
 
   if (hero.id === 'laylul') {
     const body = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.58, 1.55), matWeapon);
@@ -733,15 +742,19 @@ function buildRobloxHeroMesh(hero, skinOverride = null) {
     });
   }
 
-  rightArmPivot.add(weaponGroup);
-  leftArmPivot.add(leftWeaponGroup);
+  rightArmData.elbow.add(weaponGroup);
+  leftArmData.elbow.add(leftWeaponGroup);
 
   root.userData = {
     heroId: hero.id,
     leftLegPivot,
     rightLegPivot,
+    leftKneePivot: leftLegData.knee,
+    rightKneePivot: rightLegData.knee,
     leftArmPivot,
     rightArmPivot,
+    leftElbowPivot: leftArmData.elbow,
+    rightElbowPivot: rightArmData.elbow,
     headGroup,
     torsoGroup,
     weaponGroup,
@@ -749,6 +762,7 @@ function buildRobloxHeroMesh(hero, skinOverride = null) {
     leftTailGroup,
     rightTailGroup,
     walkPhase: Math.random() * Math.PI * 2,
+    blendMove: 0,
     attackTimer: 0,
     comboStep: 0
   };
@@ -765,7 +779,17 @@ function animateRobloxCharacter(mesh, dt, isMoving, isAttacking) {
   else if (hid === 'minotor' || hid === 'yuzong') spdMult = 10.2;
   else if (hid === 'kimee' || hid === 'esteez') spdMult = 8.5;
 
-  u.walkPhase += dt * (isMoving ? spdMult : 2.8);
+  u.blendMove = (u.blendMove || 0) + ((isMoving ? 1 : 0) - (u.blendMove || 0)) * Math.min(1, dt * 14);
+  u.walkPhase += dt * (2.6 + (spdMult - 2.6) * u.blendMove);
+  const c = Math.cos(u.walkPhase);
+  if (u.leftKneePivot && u.rightKneePivot) {
+    u.leftKneePivot.rotation.x = Math.max(0.05, -c * 0.85 * u.blendMove);
+    u.rightKneePivot.rotation.x = Math.max(0.05, c * 0.85 * u.blendMove);
+  }
+  if (u.leftElbowPivot && u.rightElbowPivot) {
+    u.leftElbowPivot.rotation.x = u.attackTimer > 0 ? -0.15 : -0.55;
+    u.rightElbowPivot.rotation.x = u.attackTimer > 0 ? -0.15 : -0.55;
+  }
 
   const applyArmStance = (phaseVal) => {
     if (hid === 'laylul' || hid === 'kimee') {
